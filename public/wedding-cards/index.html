@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>✨ Wedding Card Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cinzel:wght@400;600;700&family=Playfair+Display:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="builder.css" />
+</head>
+<body>
+    <!-- Landing Page -->
+    <div id="landingPage" class="landing-page">
+        <header class="landing-header">
+            <div class="landing-logo">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>WedCard</span><span class="accent">Builder</span>
+            </div>
+            <nav class="landing-nav">
+                <a href="#templates">Templates</a>
+                <a href="/ai-design/">AI Card Designer</a>
+                <a href="#features">Features</a>
+            </nav>
+        </header>
+
+        <section class="hero-section landing-hero">
+            <div class="hero-content">
+                <h1>Create Your Dream <span class="highlight">Wedding Invitation</span></h1>
+                <p>Design stunning digital wedding cards with AI-powered customization</p>
+                <div class="hero-buttons">
+                    <a href="#templates" class="btn-primary" style="text-decoration:none;display:inline-block;">
+                        <i class="fas fa-magic"></i> Start Building Free
+                    </a>
+                    <button class="btn-secondary" onclick="scrollToTemplates()">
+                        <i class="fas fa-eye"></i> View Templates
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="templates" class="templates-section">
+            <h2>Choose Your Style</h2>
+            <p class="section-subtitle">Pick from our beautiful collection</p>
+            <div class="templates-grid">
+                <!-- Template 1: Green - Emerald Classic -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #1a472a, #c9a84c);">
+                        <span class="template-icon">💚</span>
+                    </div>
+                    <h3>Emerald Classic</h3>
+                    <p>Elegant green theme with gold accents</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 2: Blue - Ivory Minimal -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #1e3a5f, #a8c5d7);">
+                        <span class="template-icon">🤍</span>
+                    </div>
+                    <h3>Ivory Minimal</h3>
+                    <p>Clean minimal design with blue tones</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 3: Red - Love Romantic -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #7A1C2E, #D4AF37);">
+                        <span class="template-icon">❤️</span>
+                    </div>
+                    <h3>Love Romantic</h3>
+                    <p>Passionate red with royal gold</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 4: Orange - Sunset Glow -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #e65100, #ff9800);">
+                        <span class="template-icon">🧡</span>
+                    </div>
+                    <h3>Sunset Glow</h3>
+                    <p>Warm orange hues for vibrant celebrations</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 5: Golden - Royal Gold -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #B8860B, #FFD700);">
+                        <span class="template-icon">✨</span>
+                    </div>
+                    <h3>Royal Gold</h3>
+                    <p>Luxurious golden elegance</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 6: White Silver - Silver Elegance -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #C0C0C0, #F8F8FF);">
+                        <span class="template-icon">🩶</span>
+                    </div>
+                    <h3>Silver Elegance</h3>
+                    <p>Modern silver with pristine white</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 7: Pink - Blush Romance -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #FF69B4, #FFB6C1);">
+                        <span class="template-icon">💗</span>
+                    </div>
+                    <h3>Blush Romance</h3>
+                    <p>Soft pink tones for dreamy weddings</p>
+                    <div class="template-actions">
+                        <a href="templates/blush-romance/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/blush-romance/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 8: Purple Velvet - Royal Purple -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #4B0082, #9370DB);">
+                        <span class="template-icon">💜</span>
+                    </div>
+                    <h3>Purple Velvet</h3>
+                    <p>Rich purple with regal sophistication</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+                
+                <!-- Template 9: Sky - Azure Dreams -->
+                <div class="template-card">
+                    <div class="template-preview" style="background: linear-gradient(135deg, #00BFFF, #87CEEB);">
+                        <span class="template-icon">💙</span>
+                    </div>
+                    <h3>Sky Blue</h3>
+                    <p>Serene sky blue for peaceful celebrations</p>
+                    <div class="template-actions">
+                        <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
+                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features-section">
+            <h2>Powerful Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🎨</span>
+                    <h3>Multiple Designs</h3>
+                    <p>5 design variants for each section</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">✨</span>
+                    <h3>AI Generation</h3>
+                    <p>Generate unique designs with AI prompts</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📱</span>
+                    <h3>Mobile Responsive</h3>
+                    <p>Perfect on all devices</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🎬</span>
+                    <h3>Animations</h3>
+                    <p>Beautiful cover animations</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            <p>Made with ❤️ for couples everywhere</p>
+        </footer>
+    </div>
+
+    <script>
+           // Root index.html script
+   // Only treat the URL as an invitation link if there's an actual slug
+   // after the domain (e.g. yoursite.com/john-jane). A bare visit to "/"
+   // is just someone browsing the landing page, so skip the lookup then.
+   const slug = window.location.pathname.replace(/^\/|\/$/g, '');
+   if (slug) {
+     fetch(`/api/card?slug=${slug}`)
+       .then(res => res.json())
+       .then(data => {
+         if (data.status === 'draft') {
+           document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:#333;">🚧 This invitation is being prepared.</h1>';
+         } else if (data.status === 'published') {
+           // Redirect to the specific template's index.html, passing the slug
+           window.location.href = `/templates/${data.template_id}/index.html?slug=${slug}`;
+         } else {
+           document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:red;">Invitation not found.</h1>';
+         }
+       });
+   }
+        // Landing page functions
+        function scrollToTemplates() {
+            document.getElementById('templates').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

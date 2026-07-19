@@ -1,0 +1,17 @@
+{
+  "name": "wedding-card-app",
+  "version": "1.0.0",
+  "description": "Merged WeddingCards + AICardDesign app, deployable on Railway",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^2.2.0",
+    "pg": "^8.13.1"
+  }
+}

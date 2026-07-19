@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wedding Card Builder - Database Powered</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-maroon: #7A1C2E;
+            --primary-maroon-dark: #58101E;
+            --primary-maroon-light: #9B2C42;
+            --royal-gold: #D4AF37;
+            --royal-gold-dark: #AA820A;
+            --royal-gold-light: #F3E5AB;
+            --champagne: #FDF6E2;
+            --champagne-dark: #F4E8C1;
+            --text-dark: #2C2520;
+            --text-muted: #665D57;
+            --white: #FFFFFF;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --font-heading: 'Great Vibes', cursive;
+            --font-sub: 'Cormorant Garamond', serif;
+            --font-body: 'Outfit', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-body);
+            background: #FAF5E8;
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 20px;
+            background-image: radial-gradient(ellipse at 10% 20%, rgba(212, 175, 55, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(122, 28, 46, 0.05) 0%, transparent 50%);
+        }
+        .app-container {
+            max-width: 1200px; margin: 0 auto;
+            background: rgba(255, 253, 248, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow), 0 0 0 1px rgba(212, 175, 55, 0.12);
+            padding: 32px 36px 40px;
+            position: relative; overflow: hidden; min-height: 90vh;
+        }
+        .builder-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
+        .builder-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-size: 1.8rem; color: var(--primary-maroon); }
+        .builder-logo span { color: var(--royal-gold); }
+        .step-indicator { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .step-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; background: var(--champagne-dark); color: var(--text-muted); border: 2px solid transparent; transition: var(--transition); cursor: pointer; }
+        .step-dot.active { background: var(--primary-maroon); color: var(--white); border-color: var(--royal-gold); transform: scale(1.1); box-shadow: 0 0 20px rgba(212, 175, 55, 0.25); }
+        .step-dot.done { background: var(--royal-gold); color: var(--white); border-color: var(--royal-gold-dark); }
+        .step-line { width: 28px; height: 2px; background: var(--champagne-dark); border-radius: 2px; transition: var(--transition); flex-shrink: 0; }
+        .step-line.done { background: var(--royal-gold); }
+
+        .step-panel { display: none; animation: fadeSlideIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+        .step-panel.active { display: block; }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        .step-title { font-family: var(--font-heading); font-size: 2.2rem; color: var(--primary-maroon); margin-bottom: 4px; }
+        .step-subtitle { font-family: var(--font-sub); font-size: 1.1rem; color: var(--text-muted); margin-bottom: 24px; font-style: italic; }
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(250, 245, 232, 0.98); display: flex; align-items: center; justify-content: center;
+            z-index: 9999; flex-direction: column; gap: 16px;
+        }
+        .loading-overlay.hidden {
+            display: none;
+        }
+        .loading-spinner {
+            width: 50px; height: 50px; border: 4px solid var(--champagne-dark);
+            border-top-color: var(--primary-maroon); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: var(--primary-maroon);
+        }
+
+        .theme-selector { background: var(--white); border: 2px solid var(--champagne-dark); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px; }
+        .theme-selector h4 { font-family: var(--font-sub); font-size: 1rem; margin-bottom: 12px; color: var(--primary-maroon); }
+        .theme-swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+        .theme-swatch { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: var(--transition); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .theme-swatch:hover, .theme-swatch.active { border-color: var(--text-dark); transform: scale(1.15); }
+        .sections-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .section-toggle { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--white); border-radius: var(--radius-sm); border: 2px solid var(--champagne-dark); cursor: pointer; transition: var(--transition); font-weight: 500; font-size: 0.9rem; }
+        .section-toggle:hover { border-color: var(--royal-gold); transform: translateY(-2px); box-shadow: var(--shadow); }
+        .section-toggle.active { border-color: var(--primary-maroon); background: rgba(122, 28, 46, 0.05); }
+        .section-toggle .check { margin-left: auto; color: var(--royal-gold); opacity: 0; transition: var(--transition); }
+        .section-toggle.active .check { opacity: 1; }
+        .section-toggle.required { opacity: 0.8; cursor: default; }
+        .section-toggle.required .check { opacity: 1; color: var(--primary-maroon); }
+        .reorder-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; max-width: 500px; }
+        .reorder-item { display: flex; align-items: center; gap: 14px; padding: 12px 18px; background: var(--white); border-radius: var(--radius-sm); border: 1px solid var(--champagne-dark); transition: var(--transition); cursor: grab; }
+        .reorder-item:hover { border-color: var(--royal-gold); box-shadow: var(--shadow); }
+        .reorder-item .drag-handle { color: var(--text-muted); cursor: grab; }
+        .reorder-item .item-name { flex: 1; font-weight: 500; }
+        .reorder-item .item-badge { font-size: 0.65rem; padding: 2px 10px; border-radius: 20px; background: var(--champagne-dark); color: var(--text-muted); }
+        .reorder-item .item-badge.required { background: var(--primary-maroon); color: var(--white); }
+        .reorder-item .item-remove { color: #d32f2f; cursor: pointer; opacity: 0.4; background: none; border: none; font-size: 1rem; }
+        .reorder-item .item-remove:hover { opacity: 1; }
+        .reorder-item .item-remove.disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .section-design-card { background: var(--white); border-radius: var(--radius-sm); border: 2px solid var(--champagne-dark); padding: 20px; margin-bottom: 20px; transition: var(--transition); }
+        .section-design-card:hover { border-color: var(--royal-gold-light); box-shadow: var(--shadow); }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+        .card-header .section-name { font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: var(--primary-maroon); }
+        .card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .design-controls { display: flex; flex-direction: column; gap: 14px; }
+        .design-controls > div > label, .field-label { font-weight: 600; font-size: 0.85rem; color: var(--text-dark); display: block; margin-bottom: 6px; }
+        .design-controls select, .design-controls input[type="text"], .design-controls input[type="date"], .design-controls input[type="time"], .design-controls input[type="url"], .design-controls textarea {
+            width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+            border: 2px solid var(--champagne-dark); font-family: var(--font-body);
+            font-size: 0.95rem; transition: var(--transition); background: var(--white);
+        }
+        .design-controls select:focus, .design-controls input:focus, .design-controls textarea:focus {
+            outline: none; border-color: var(--royal-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+        }
+        .image-upload-group { margin-bottom: 10px; }
+        .image-upload-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
+        .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .file-input-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 10px; background: var(--champagne); border: 2px dashed var(--royal-gold); border-radius: var(--radius-sm); color: var(--primary-maroon); font-weight: 500; font-size: 0.9rem; transition: var(--transition); }
+        .file-input-btn:hover { background: var(--royal-gold-light); }
+        .image-preview-container { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; padding-bottom: 8px; flex-wrap: wrap; }
+        .image-preview-container::-webkit-scrollbar { height: 4px; }
+        .image-preview-container::-webkit-scrollbar-thumb { background: var(--royal-gold); border-radius: 4px; }
+        .preview-thumb-item { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 2px solid var(--champagne-dark); flex-shrink: 0; }
+        .preview-thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-thumb-item .remove-img { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* Typography & Layout Controls */
+        .typography-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+            background: var(--champagne);
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+        }
+        .typography-controls label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .typography-controls input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary-maroon);
+        }
+        .typography-controls .range-value {
+            font-weight: 600;
+            color: var(--primary-maroon);
+            min-width: 30px;
+            display: inline-block;
+        }
+        .typography-controls select {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 2px solid var(--champagne-dark);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+        }
+
+        .ai-section {
+            margin-top: 16px; padding-top: 16px;
+            border-top: 2px dashed var(--champagne-dark);
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.04), rgba(63, 61, 158, 0.04));
+            padding: 14px; border-radius: var(--radius-sm);
+        }
+        .ai-prompt-group { flex: 1; min-width: 200px; position: relative; }
+        .ai-prompt-group label { font-size: 0.75rem; font-weight: 600; color: #6C63FF; display: block; margin-bottom: 4px; }
+        .ai-prompt-input {
+            width: 100%; padding: 9px 14px; border-radius: var(--radius-sm);
+            border: 2px solid #d4d2ff; font-family: var(--font-body); font-size: 0.9rem;
+            background: white; transition: var(--transition);
+        }
+        .ai-prompt-input:focus { outline: none; border-color: #6C63FF; box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.12); }
+        
+        /* Template tag highlighting */
+        .template-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #6C63FF, #3F3D9E);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .template-tag:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4); }
+        .template-tag .remove-tag {
+            margin-left: 6px;
+            opacity: 0.7;
+            font-weight: bold;
+        }
+        .template-tag .remove-tag:hover { opacity: 1; }
+        
+        .template-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #6C63FF;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 8px 25px rgba(108, 99, 255, 0.25);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .template-suggestions.active { display: block; }
+        .template-suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+        }
+        .template-suggestion-item:last-child { border-bottom: none; }
+        .template-suggestion-item:hover { background: rgba(108, 99, 255, 0.1); }
+        .template-suggestion-item .template-id { font-weight: 600; color: #6C63FF; }
+        .template-suggestion-item .template-label { color: #666; margin-left: 8px; }
+        
+        .ai-generate-btn {
+            padding: 10px 20px; background: linear-gradient(135deg, #6C63FF, #3F3D9E);
+            color: white; border: none; border-radius: var(--radius-sm); font-weight: 600;
+            cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.9rem; white-space: nowrap;
+        }
+        .ai-generate-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108, 99, 255, 0.35); }
+
+        .preview-box { display: flex; flex-direction: column; gap: 12px; align-items: center; background: var(--champagne); border-radius: var(--radius-sm); padding: 16px; }
+        .preview-frame { width: 100%; max-width: 280px; aspect-ratio: 9/16; background: var(--white); border-radius: 12px; border: 2px solid var(--royal-gold); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-muted); }
+        .preview-frame iframe { width: 100%; height: 100%; border: none; }
+
+        .event-builder { background: var(--champagne); border-radius: var(--radius-sm); padding: 16px; margin-top: 8px; }
+        .event-item { background: var(--white); border: 1px solid var(--champagne-dark); border-radius: 8px; padding: 16px; margin-bottom: 12px; position: relative; }
+        .event-item .remove-event { position: absolute; top: 8px; right: 8px; background: none; border: none; color: #d32f2f; cursor: pointer; font-size: 1rem; }
+        .event-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .add-event-btn { width: 100%; padding: 10px; background: var(--primary-maroon); color: white; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .add-event-btn:hover { background: var(--primary-maroon-dark); }
+
+        .option-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .option-chip { padding: 6px 14px; background: var(--white); border: 2px solid var(--champagne-dark); border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: var(--transition); font-weight: 500; }
+        .option-chip:hover { border-color: var(--royal-gold); }
+        .option-chip.active { background: var(--primary-maroon); color: white; border-color: var(--primary-maroon); }
+
+        .opening-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .opening-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-content: start; }
+        .opening-card { padding: 20px; background: var(--white); border-radius: var(--radius-sm); border: 2px solid var(--champagne-dark); text-align: center; cursor: pointer; transition: var(--transition); }
+        .opening-card:hover { border-color: var(--royal-gold); transform: translateY(-4px); box-shadow: var(--shadow); }
+        .opening-card.active { border-color: var(--primary-maroon); background: rgba(122, 28, 46, 0.04); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12); }
+        .opening-card .anim-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .opening-card .anim-name { font-weight: 600; font-size: 0.95rem; color: var(--primary-maroon); }
+        .opening-card .anim-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+        .opening-preview-box { background: var(--white); border: 2px solid var(--royal-gold); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; align-items: center; position: sticky; top: 20px; }
+        .opening-preview-frame {
+            width: 240px; height: 380px; border-radius: 16px;
+            position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-heading); text-align: center;
+            aspect-ratio: 9 / 16; background: #1a0505;
+        }
+        .opening-preview-frame iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        .preview-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .preview-device {
+            background: #1a1a2e; border-radius: 28px; padding: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25); aspect-ratio: 9/16;
+            max-height: 680px; overflow: hidden; position: relative; margin: 0 auto; max-width: 320px;
+        }
+        .preview-device.pc { aspect-ratio: 16/10; max-height: 500px; border-radius: 16px; max-width: 100%; }
+        .preview-device-inner {
+            width: 100%; height: 100%; border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        .preview-device-inner iframe {
+            width: 100%; height: 100%; border: none; display: block; background: #fff;
+        }
+        .preview-replay-btn {
+            margin-left: 8px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600;
+            background: var(--champagne-dark); color: var(--primary-maroon); border: none;
+            border-radius: 12px; cursor: pointer; transition: var(--transition);
+        }
+        .preview-replay-btn:hover { background: var(--royal-gold-light); }
+
+        .share-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0 20px; justify-content: center; }
+        .share-btn { padding: 12px 24px; border-radius: var(--radius-sm); border: none; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; color: white; }
+        .share-btn.whatsapp { background: #25D366; }
+        .share-btn.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .share-btn.email { background: #EA4335; }
+        .share-btn.link { background: var(--primary-maroon); }
+        .share-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        .qr-section { display: flex; align-items: center; gap: 24px; padding: 24px; background: var(--white); border-radius: var(--radius-sm); border: 2px dashed var(--royal-gold); margin-top: 12px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .qr-placeholder { width: 120px; height: 120px; background: repeating-conic-gradient(var(--champagne-dark) 0% 25%, white 0% 50%) 0 0 / 20px 20px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--champagne-dark); gap: 12px; flex-wrap: wrap; }
+        .btn { padding: 12px 28px; border-radius: var(--radius-sm); border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary-maroon); color: var(--white); }
+        .btn-primary:hover { background: var(--primary-maroon-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(122, 28, 46, 0.3); }
+        .btn-secondary { background: var(--champagne-dark); color: var(--text-dark); }
+        .btn-secondary:hover { background: var(--champagne); transform: translateY(-2px); }
+        .btn-gold { background: var(--royal-gold); color: var(--white); }
+        .btn-gold:hover { background: var(--royal-gold-dark); transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+        .effects-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .effects-card {
+            background: var(--white);
+            border: 2px solid var(--champagne-dark);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            transition: var(--transition);
+        }
+        .effects-card:hover {
+            border-color: var(--royal-gold-light);
+            box-shadow: var(--shadow);
+        }
+        .effects-card h4 {
+            font-family: var(--font-sub);
+            font-size: 1.1rem;
+            color: var(--primary-maroon);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .effects-card .effect-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: var(--champagne);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .effects-card .effect-option:hover {
+            background: var(--champagne-dark);
+        }
+        .effects-card .effect-option input[type="radio"],
+        .effects-card .effect-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-maroon);
+            cursor: pointer;
+        }
+        .effects-card .effect-option label {
+            flex: 1;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .effects-card .effect-option .effect-preview {
+            font-size: 1.2rem;
+        }
+        .effects-card input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--champagne-dark);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        .effects-card input[type="text"],
+        .effects-card input[type="url"] {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--champagne-dark);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: var(--white);
+        }
+        .effects-card input[type="text"]:focus,
+        .effects-card input[type="url"]:focus {
+            outline: none;
+            border-color: var(--royal-gold);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+        }
+        .effects-card .range-slider {
+            width: 100%;
+            accent-color: var(--primary-maroon);
+        }
+        .effects-card .range-value {
+            font-weight: 600;
+            color: var(--primary-maroon);
+            min-width: 40px;
+            display: inline-block;
+        }
+        .effect-toggle-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .effect-toggle-btn {
+            padding: 6px 16px;
+            border: 2px solid var(--champagne-dark);
+            border-radius: 20px;
+            background: var(--white);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+        .effect-toggle-btn:hover {
+            border-color: var(--royal-gold);
+        }
+        .effect-toggle-btn.active {
+            background: var(--primary-maroon);
+            color: white;
+            border-color: var(--primary-maroon);
+        }
+        .particle-config {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .particle-config label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 1024px) {
+            .card-body, .opening-layout, .preview-layout, .effects-grid { grid-template-columns: 1fr; }
+            .preview-device { max-width: 300px; }
+            .opening-preview-box { position: static; margin-top: 24px; }
+            .particle-config { grid-template-columns: 1fr; }
+            .typography-controls { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .app-container { padding: 20px 16px 28px; }
+            .builder-header { flex-direction: column; align-items: flex-start; }
+            .step-indicator { width: 100%; justify-content: center; }
+            .event-grid { grid-template-columns: 1fr; }
+            .qr-section { flex-direction: column; text-align: center; }
+            .nav-buttons { flex-direction: column; }
+            .nav-buttons .btn { width: 100%; justify-content: center; }
+        }
+
+        /* ---------------------------------------------------------------
+           F6 debug console — live AI response stream log.
+           Hidden by default; toggled with the F6 key. Purely a developer/
+           debugging aid, has no effect on the actual generate/save flow.
+        --------------------------------------------------------------- */
+        #aiStreamLog {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            width: min(560px, calc(100vw - 32px));
+            height: min(420px, calc(100vh - 32px));
+            background: #0b0f14;
+            color: #d7e0ea;
+            border: 1px solid #2a3542;
+            border-radius: 10px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+            display: none;
+            flex-direction: column;
+            z-index: 99999;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            overflow: hidden;
+        }
+        #aiStreamLog.open { display: flex; }
+        #aiStreamLog .ai-log-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #121a23;
+            border-bottom: 1px solid #2a3542;
+            flex-shrink: 0;
+        }
+        #aiStreamLog .ai-log-title {
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #8fa3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #aiStreamLog .ai-log-status {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #3a4756;
+            flex-shrink: 0;
+        }
+        #aiStreamLog .ai-log-status.streaming { background: #c9a84c; animation: aiLogPulse 1s ease-in-out infinite; }
+        #aiStreamLog .ai-log-status.done { background: #3fb27f; }
+        #aiStreamLog .ai-log-status.error { background: #d9534f; }
+        @keyframes aiLogPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+        #aiStreamLog .ai-log-actions { display: flex; gap: 6px; }
+        #aiStreamLog .ai-log-actions button {
+            background: transparent;
+            border: 1px solid #2a3542;
+            color: #8fa3b8;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #aiStreamLog .ai-log-actions button:hover { color: #d7e0ea; border-color: #46596e; }
+        #aiStreamLog .ai-log-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 12px;
+            font-size: 12px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        #aiStreamLog .ai-log-body::-webkit-scrollbar { width: 8px; }
+        #aiStreamLog .ai-log-body::-webkit-scrollbar-thumb { background: #2a3542; border-radius: 4px; }
+        #aiStreamLog .ai-log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #1c242e; }
+        #aiStreamLog .ai-log-entry:last-child { border-bottom: none; }
+        #aiStreamLog .ai-log-meta { color: #5e768c; font-size: 10.5px; margin-bottom: 4px; }
+        #aiStreamLog .ai-log-chunk { color: #d7e0ea; }
+        #aiStreamLog .ai-log-error { color: #ff8a80; }
+        #aiStreamLog .ai-log-hint {
+            font-size: 10.5px;
+            color: #5e768c;
+            padding: 6px 12px;
+            border-top: 1px solid #1c242e;
+            flex-shrink: 0;
+        }
+        #aiStreamLogToggleHint {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            z-index: 99998;
+            background: rgba(11,15,20,0.85);
+            color: #8fa3b8;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #2a3542;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #aiStreamLogToggleHint.visible { opacity: 1; }
+    </style>
+</head>
+<body>
+    <!-- Loading screen -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading AI Card Designer...</div>
+    </div>
+
+    <!-- F6 live AI response stream log (see AiStreamLog module below) -->
+    <div id="aiStreamLog">
+        <div class="ai-log-header">
+            <div class="ai-log-title"><span class="ai-log-status" id="aiStreamLogStatus"></span> AI Response Stream</div>
+            <div class="ai-log-actions">
+                <button type="button" onclick="AiStreamLog.clear()">Clear</button>
+                <button type="button" onclick="AiStreamLog.close()">✕</button>
+            </div>
+        </div>
+        <div class="ai-log-body" id="aiStreamLogBody"></div>
+        <div class="ai-log-hint">F6 to toggle · live token-by-token output from the design model</div>
+    </div>
+    <div id="aiStreamLogToggleHint">Press F6 for AI response log</div>
+
+    <div class="app-container" id="appContainer">
+        <header class="builder-header">
+            <div class="builder-logo">
+                <i class="fas fa-wand-magic-sparkles"></i> Card<span>Builder</span>
+                <span style="font-family:var(--font-body);font-size:0.6rem;font-weight:400;color:var(--text-muted);margin-left:4px;">✨ DB</span>
+            </div>
+            <div class="step-indicator">
+                <span class="step-dot active" data-step="0" onclick="goToStep(0)">1</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="1" onclick="goToStep(1)">2</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="2" onclick="goToStep(2)">3</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="3" onclick="goToStep(3)">4</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="4" onclick="goToStep(4)">5</span>
+                <span class="step-line"></span>
+                <span class="step-dot" data-step="5" onclick="goToStep(5)">6</span>
+            </div>
+        </header>
+
+        <!-- Step 0: Choose Sections & Theme -->
+        <div class="step-panel active" data-step="0">
+            <h2 class="step-title">📋 Choose Sections & Theme</h2>
+            <p class="step-subtitle">Select elements, arrange their order, and pick your global theme.</p>
+            <div class="theme-selector">
+                <h4><i class="fas fa-palette"></i> Global Theme & Background</h4>
+                <div class="theme-swatches">
+                    <div class="theme-swatch active" style="background: linear-gradient(135deg, #7A1C2E, #9B2C42);" data-theme="maroon" onclick="setTheme('maroon')"></div>
+                    <div class="theme-swatch" style="background: linear-gradient(135deg, #1a4a3a, #2d6a4f);" data-theme="emerald" onclick="setTheme('emerald')"></div>
+                    <div class="theme-swatch" style="background: linear-gradient(135deg, #1a1a2e, #16213e);" data-theme="dark" onclick="setTheme('dark')"></div>
+                    <div class="theme-swatch" style="background: linear-gradient(135deg, #8B4513, #A0522D);" data-theme="brown" onclick="setTheme('brown')"></div>
+                </div>
+            </div>
+            <div class="sections-grid" id="sectionsGrid"></div>
+            <h4 style="font-weight:600;font-size:0.9rem;margin-bottom:8px;color:var(--primary-maroon);">☰ Drag to reorder</h4>
+            <div class="reorder-list" id="reorderList"></div>
+            <div class="nav-buttons">
+                <span></span>
+                <button class="btn btn-primary" onclick="goToStep(1)">Next Step <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 1: Design & Content -->
+        <div class="step-panel" data-step="1">
+            <h2 class="step-title">🎨 Design & Content</h2>
+            <p class="step-subtitle">Choose templates, upload images, and fill details. All loaded from database.</p>
+            <div id="sectionDesignsContainer"></div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToStep(0)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-primary" onclick="goToStep(2)">Next Step <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 2: Cover Animation -->
+        <div class="step-panel" data-step="2">
+            <h2 class="step-title">🎬 Cover Animation</h2>
+            <p class="step-subtitle">Choose how your invitation opens — from elegant to dramatic.</p>
+            <div class="opening-layout">
+                <div>
+                    <div style="margin-bottom:16px;">
+                        <label class="field-label" style="display:block;margin-bottom:8px;">Select Cover Design</label>
+                        <select id="coverDesignSelect" onchange="UIRenderer.selectCoverDesign(this.value)" style="width:100%;padding:12px;border-radius:var(--radius-sm);border:2px solid var(--champagne-dark);font-family:var(--font-body);font-size:0.95rem;background:var(--white);">
+                            <option value="">-- Select a cover design --</option>
+                        </select>
+                    </div>
+                    <div id="openingFieldsContainer" class="design-controls" style="margin-top:20px;"></div>
+                </div>
+                <div class="opening-preview-box">
+                    <h4 style="margin-bottom:12px;color:var(--primary-maroon);font-family:var(--font-sub);">Live Preview</h4>
+                    <div class="opening-preview-frame" id="openingPreviewFrameBox">
+                        <iframe id="openingPreviewFrame" title="opening preview" style="width:100%;height:100%;border:none;"></iframe>
+                    </div>
+                    <button class="preview-play-btn" onclick="playOpeningPreview()" style="margin-top:12px;padding:8px 20px;background:var(--primary-maroon);color:white;border:none;border-radius:20px;cursor:pointer;font-weight:600;">
+                        <i class="fas fa-play"></i> Play Animation
+                    </button>
+                    <div style="margin-top:16px;width:100%;">
+                        <label style="font-size:0.8rem;font-weight:600;">✨ AI Generate New Opening</label>
+                        <div style="display:flex;gap:8px;margin-top:4px;">
+                            <input type="text" id="openingAIPrompt" placeholder="e.g., A romantic sunset reveal with flowers" style="flex:1;padding:8px;border-radius:8px;border:2px solid var(--champagne-dark);" />
+                            <button class="btn btn-primary" style="padding:8px 16px;" onclick="generateOpeningAI()"><i class="fas fa-wand-magic-sparkles"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-primary" onclick="goToStep(3)">Next Step <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 3: Page Effects -->
+        <div class="step-panel" data-step="3">
+            <h2 class="step-title">✨ Page Effects</h2>
+            <p class="step-subtitle">Add visual flair to your entire invitation with backgrounds, particles, and scroll effects.</p>
+            <div class="effects-grid">
+                <!-- Background -->
+                <div class="effects-card">
+                    <h4><i class="fas fa-image"></i> Page Background</h4>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Background Color</label>
+                        <input type="color" id="pageBgColor" value="#FAF5E8" onchange="updatePageEffects()" style="width:100%;height:44px;border:2px solid var(--champagne-dark);border-radius:8px;padding:2px;cursor:pointer;" />
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Background Image (URL)</label>
+                        <input type="url" id="pageBgImage" placeholder="https://example.com/background.jpg" onchange="updatePageEffects()" />
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Background Style</label>
+                        <div class="effect-toggle-group">
+                            <button class="effect-toggle-btn active" data-bgstyle="solid" onclick="setBgStyle('solid', this)">Solid</button>
+                            <button class="effect-toggle-btn" data-bgstyle="gradient" onclick="setBgStyle('gradient', this)">Gradient</button>
+                            <button class="effect-toggle-btn" data-bgstyle="image" onclick="setBgStyle('image', this)">Image</button>
+                            <button class="effect-toggle-btn" data-bgstyle="pattern" onclick="setBgStyle('pattern', this)">Pattern</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Particles -->
+                <div class="effects-card">
+                    <h4><i class="fas fa-sparkles"></i> Particles Effect</h4>
+                    <div class="effect-option">
+                        <input type="checkbox" id="particlesEnabled" onchange="updatePageEffects()" />
+                        <label for="particlesEnabled">Enable Particles</label>
+                        <span class="effect-preview">✨</span>
+                    </div>
+                    <div id="particleConfig" style="display:none;">
+                        <div class="particle-config">
+                            <div>
+                                <label>Particle Count</label>
+                                <input type="range" class="range-slider" id="particleCount" min="20" max="200" value="80" onchange="updatePageEffects()" />
+                                <span class="range-value" id="particleCountVal">80</span>
+                            </div>
+                            <div>
+                                <label>Particle Size</label>
+                                <input type="range" class="range-slider" id="particleSize" min="1" max="10" value="3" onchange="updatePageEffects()" />
+                                <span class="range-value" id="particleSizeVal">3</span>
+                            </div>
+                            <div>
+                                <label>Speed</label>
+                                <input type="range" class="range-slider" id="particleSpeed" min="1" max="10" value="3" onchange="updatePageEffects()" />
+                                <span class="range-value" id="particleSpeedVal">3</span>
+                            </div>
+                            <div>
+                                <label>Particle Color</label>
+                                <input type="color" id="particleColor" value="#D4AF37" onchange="updatePageEffects()" style="width:100%;height:40px;border:2px solid var(--champagne-dark);border-radius:8px;padding:2px;cursor:pointer;" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scroll Effects -->
+                <div class="effects-card">
+                    <h4><i class="fas fa-arrows-alt-v"></i> Scroll Effects</h4>
+                    <div class="effect-option">
+                        <input type="radio" name="scrollEffect" value="none" checked onchange="updatePageEffects()" />
+                        <label>None</label>
+                    </div>
+                    <div class="effect-option">
+                        <input type="radio" name="scrollEffect" value="fade" onchange="updatePageEffects()" />
+                        <label>Fade In</label>
+                        <span class="effect-preview">🌫️</span>
+                    </div>
+                    <div class="effect-option">
+                        <input type="radio" name="scrollEffect" value="slide" onchange="updatePageEffects()" />
+                        <label>Slide Up</label>
+                        <span class="effect-preview">⬆️</span>
+                    </div>
+                    <div class="effect-option">
+                        <input type="radio" name="scrollEffect" value="parallax" onchange="updatePageEffects()" />
+                        <label>Parallax</label>
+                        <span class="effect-preview">🌊</span>
+                    </div>
+                    <div class="effect-option">
+                        <input type="radio" name="scrollEffect" value="zoom" onchange="updatePageEffects()" />
+                        <label>Zoom In</label>
+                        <span class="effect-preview">🔍</span>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Scroll Speed (1-10)</label>
+                        <input type="range" class="range-slider" id="scrollSpeed" min="1" max="10" value="5" onchange="updatePageEffects()" />
+                        <span class="range-value" id="scrollSpeedVal">5</span>
+                    </div>
+                </div>
+
+                <!-- Typography & Layout Controls -->
+                <div class="effects-card">
+                    <h4><i class="fas fa-font"></i> Typography & Layout</h4>
+                    <div class="typography-controls">
+                        <div>
+                            <label>Font Family</label>
+                            <select id="themeFont" onchange="updatePageEffects()">
+                                <option value="'Great Vibes',cursive">Great Vibes (Elegant)</option>
+                                <option value="'Cinzel',serif">Cinzel (Royal)</option>
+                                <option value="'Cormorant Garamond',serif">Cormorant (Classic)</option>
+                                <option value="'Playfair Display',serif">Playfair Display</option>
+                                <option value="'Outfit',sans-serif">Outfit (Modern)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Font Size</label>
+                            <input type="range" class="range-slider" id="fontSize" min="8" max="32" value="16" onchange="updatePageEffects()" />
+                            <span class="range-value" id="fontSizeVal">16px</span>
+                        </div>
+                        <div>
+                            <label>Line Height</label>
+                            <input type="range" class="range-slider" id="lineHeight" min="1" max="2.5" step="0.1" value="1.6" onchange="updatePageEffects()" />
+                            <span class="range-value" id="lineHeightVal">1.6</span>
+                        </div>
+                        <div>
+                            <label>Max Content Width</label>
+                            <select id="contentWidth" onchange="updatePageEffects()">
+                                <option value="100%">Full Width</option>
+                                <option value="90%">90%</option>
+                                <option value="80%">80%</option>
+                                <option value="70%">70%</option>
+                                <option value="60%">60%</option>
+                                <option value="50%">50%</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Content Alignment</label>
+                            <select id="contentAlign" onchange="updatePageEffects()">
+                                <option value="center">Center</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Section Spacing</label>
+                            <input type="range" class="range-slider" id="sectionSpacing" min="0" max="120" value="40" onchange="updatePageEffects()" />
+                            <span class="range-value" id="sectionSpacingVal">40px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme Overrides -->
+                <div class="effects-card">
+                    <h4><i class="fas fa-paint-brush"></i> Theme Overrides</h4>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Primary Color</label>
+                        <input type="color" id="themePrimary" value="#7A1C2E" onchange="updatePageEffects()" style="width:100%;height:44px;border:2px solid var(--champagne-dark);border-radius:8px;padding:2px;cursor:pointer;" />
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Gold Accent</label>
+                        <input type="color" id="themeGold" value="#D4AF37" onchange="updatePageEffects()" style="width:100%;height:44px;border:2px solid var(--champagne-dark);border-radius:8px;padding:2px;cursor:pointer;" />
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Text Color</label>
+                        <input type="color" id="textColor" value="#2C2520" onchange="updatePageEffects()" style="width:100%;height:44px;border:2px solid var(--champagne-dark);border-radius:8px;padding:2px;cursor:pointer;" />
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-primary" onclick="goToStep(4)">Next Step <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 4: Live Preview -->
+        <div class="step-panel" data-step="4">
+            <h2 class="step-title">👁️ Live Preview</h2>
+            <p class="step-subtitle">See your complete wedding card as a single scrollable invitation.</p>
+            <div class="preview-layout">
+                <div>
+                    <div class="preview-device">
+                        <div class="preview-device-inner">
+                            <iframe id="mobilePreview" title="mobile preview"></iframe>
+                        </div>
+                    </div>
+                    <div style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:8px;">
+                        📱 Mobile View
+                        <button class="preview-replay-btn" onclick="UIRenderer.replayPreview('mobilePreview')" title="Replay animations">
+                            <i class="fas fa-rotate-right"></i> Replay
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <div class="preview-device pc">
+                        <div class="preview-device-inner">
+                            <iframe id="desktopPreview" title="desktop preview"></iframe>
+                        </div>
+                    </div>
+                    <div style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:8px;">
+                        💻 Desktop View
+                        <button class="preview-replay-btn" onclick="UIRenderer.replayPreview('desktopPreview')" title="Replay animations">
+                            <i class="fas fa-rotate-right"></i> Replay
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToStep(3)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-gold" onclick="saveCard()"><i class="fas fa-save"></i> Save to DB</button>
+                <button class="btn btn-primary" onclick="goToStep(5)">Share Card <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 5: Share -->
+        <div class="step-panel" data-step="5">
+            <h2 class="step-title">📤 Share Your Invitation</h2>
+            <p class="step-subtitle">Your card is ready! Share the link with friends and family.</p>
+            <div class="share-row">
+                <button class="share-btn link" onclick="copyLink()"><i class="fas fa-link"></i> Copy Link</button>
+                <button class="share-btn whatsapp" onclick="shareCard('whatsapp')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                <button class="share-btn instagram" onclick="shareCard('instagram')"><i class="fab fa-instagram"></i> Instagram</button>
+                <button class="share-btn email" onclick="shareCard('email')"><i class="fas fa-envelope"></i> Email</button>
+            </div>
+            <div class="qr-section">
+                <div class="qr-placeholder"><i class="fas fa-qrcode" style="font-size:3rem;color:var(--primary-maroon);"></i></div>
+                <div style="text-align:left;">
+                    <p style="font-weight:600;color:var(--primary-maroon);font-size:1.1rem;">Scan to View</p>
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin:4px 0 12px;">Point your camera at the QR code to open the invitation.</p>
+                    <button class="btn btn-secondary" onclick="alert('QR Code downloaded!')"><i class="fas fa-download"></i> Download QR</button>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToStep(4)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-gold" onclick="alert('🎉 Published!')"><i class="fas fa-check-circle"></i> Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // API CONFIGURATION
+        // ==========================================
+        const API_BASE = window.location.origin;
+
+        // ==========================================
+        // F6 AI RESPONSE STREAM LOG
+        // Live console showing the raw model output as it streams in from
+        // /api/ai/generate-section-stream. Purely observational — the actual
+        // generate/save flow is untouched and still works even if this panel
+        // is never opened.
+        // ==========================================
+        const AiStreamLog = {
+            _panel: null,
+            _body: null,
+            _status: null,
+            _hint: null,
+            _currentEntry: null,
+            _hintTimer: null,
+
+            init() {
+                this._panel = document.getElementById('aiStreamLog');
+                this._body = document.getElementById('aiStreamLogBody');
+                this._status = document.getElementById('aiStreamLogStatus');
+                this._hint = document.getElementById('aiStreamLogToggleHint');
+
+                document.addEventListener('keydown', (e) => {
+                    // Ignore F6 while typing in a text field/select so it doesn't
+                    // interfere with normal form use if a browser default exists.
+                    if (e.key === 'F6') {
+                        e.preventDefault();
+                        this.toggle();
+                    }
+                });
+            },
+
+            toggle() {
+                if (!this._panel) return;
+                this._panel.classList.contains('open') ? this.close() : this.open();
+            },
+
+            open() {
+                if (!this._panel) return;
+                this._panel.classList.add('open');
+                this._body.scrollTop = this._body.scrollHeight;
+            },
+
+            close() {
+                if (!this._panel) return;
+                this._panel.classList.remove('open');
+            },
+
+            clear() {
+                if (this._body) this._body.innerHTML = '';
+            },
+
+            _setStatus(state) {
+                if (!this._status) return;
+                this._status.className = 'ai-log-status' + (state ? ` ${state}` : '');
+            },
+
+            // Briefly flashes the "press F6" hint the first couple of times a
+            // generation runs, so users discover the panel exists, without being
+            // naggy about it forever.
+            _flashHint() {
+                if (!this._hint || this._panel.classList.contains('open')) return;
+                if ((AiStreamLog._hintShownCount || 0) >= 2) return;
+                AiStreamLog._hintShownCount = (AiStreamLog._hintShownCount || 0) + 1;
+                this._hint.classList.add('visible');
+                clearTimeout(this._hintTimer);
+                this._hintTimer = setTimeout(() => this._hint.classList.remove('visible'), 3500);
+            },
+
+            // Call at the start of a generation request. Returns nothing; use the
+            // other methods to feed it as the request progresses.
+            startEntry(label) {
+                if (!this._body) return;
+                this._flashHint();
+                this._setStatus('streaming');
+                const entry = document.createElement('div');
+                entry.className = 'ai-log-entry';
+                const meta = document.createElement('div');
+                meta.className = 'ai-log-meta';
+                meta.textContent = `▶ ${label} — ${new Date().toLocaleTimeString()}`;
+                const chunkEl = document.createElement('span');
+                chunkEl.className = 'ai-log-chunk';
+                entry.appendChild(meta);
+                entry.appendChild(chunkEl);
+                this._body.appendChild(entry);
+                this._currentEntry = { entry, meta, chunkEl, text: '' };
+                this._trim();
+                this._scrollIfNeeded();
+            },
+
+            appendChunk(text) {
+                if (!this._currentEntry) this.startEntry('generation');
+                this._currentEntry.text += text;
+                this._currentEntry.chunkEl.textContent = this._currentEntry.text;
+                this._scrollIfNeeded();
+            },
+
+            finishEntry(note) {
+                this._setStatus('done');
+                if (this._currentEntry && note) {
+                    this._currentEntry.meta.textContent += `  ✓ ${note}`;
+                }
+                this._currentEntry = null;
+                this._scrollIfNeeded();
+            },
+
+            errorEntry(message) {
+                this._setStatus('error');
+                if (!this._body) return;
+                if (this._currentEntry) {
+                    this._currentEntry.meta.textContent += '  ✗ failed';
+                }
+                const err = document.createElement('div');
+                err.className = 'ai-log-error';
+                err.textContent = `✗ ${message}`;
+                if (this._currentEntry) {
+                    this._currentEntry.entry.appendChild(err);
+                } else {
+                    this._body.appendChild(err);
+                }
+                this._currentEntry = null;
+                this._scrollIfNeeded();
+            },
+
+            _trim() {
+                // Keep at most the last 20 entries so the panel doesn't grow forever.
+                while (this._body.children.length > 20) {
+                    this._body.removeChild(this._body.firstChild);
+                }
+            },
+
+            _scrollIfNeeded() {
+                if (!this._panel.classList.contains('open')) return;
+                const nearBottom = this._body.scrollHeight - this._body.scrollTop - this._body.clientHeight < 60;
+                if (nearBottom) this._body.scrollTop = this._body.scrollHeight;
+            },
+
+            // Streams a POST to /api/ai/generate-section-stream, logging every
+            // chunk into the panel live, and resolves with
+            // { updates, dropped, result, templateId } — the server has already
+            // merged the validated AI updates into the selected base template
+            // by the time 'done' arrives.
+            async streamGenerate(body, label) {
+                this.startEntry(label);
+                const res = await fetch(`${API_BASE}/api/ai/generate-section-stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+
+                if (!res.ok || !res.body) {
+                    // Fall back to reading whatever JSON error body came back, if any.
+                    let errMsg = `HTTP ${res.status}`;
+                    try {
+                        const errData = await res.json();
+                        errMsg = errData.error || errMsg;
+                    } catch {}
+                    this.errorEntry(errMsg);
+                    throw new Error(errMsg);
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                let finalPayload = null;
+                let finalError = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+
+                    let sep;
+                    while ((sep = buffer.indexOf('\n\n')) !== -1) {
+                        const frame = buffer.slice(0, sep);
+                        buffer = buffer.slice(sep + 2);
+                        for (const line of frame.split('\n')) {
+                            const trimmed = line.trim();
+                            if (!trimmed.startsWith('data:')) continue;
+                            const payload = trimmed.slice(5).trim();
+                            if (!payload) continue;
+                            let msg;
+                            try { msg = JSON.parse(payload); } catch { continue; }
+
+                            if (msg.type === 'chunk') {
+                                this.appendChunk(msg.text);
+                            } else if (msg.type === 'done') {
+                                finalPayload = msg;
+                                this.finishEntry('done');
+                            } else if (msg.type === 'error') {
+                                finalError = msg;
+                                this.errorEntry(msg.error + (msg.details ? `: ${msg.details.join('; ')}` : ''));
+                            }
+                        }
+                    }
+                }
+
+                if (finalError) {
+                    const err = new Error(finalError.error);
+                    err.details = finalError.details;
+                    throw err;
+                }
+                if (!finalPayload) {
+                    this.errorEntry('Stream ended with no result returned');
+                    throw new Error('Stream ended with no result returned');
+                }
+                return finalPayload;
+            },
+        };
+        AiStreamLog.init();
+
+        // ==========================================
+        // DATABASE API LAYER
+        // ==========================================
+        class DatabaseAPI {
+            async fetchSectionDesigns(sectionType) {
+                try {
+                    // Step 1: get the lightweight list of designs for this section (id + label only)
+                    const listResponse = await fetch(`${API_BASE}/api/sections/${sectionType}`);
+                    if (!listResponse.ok) throw new Error(`HTTP ${listResponse.status}`);
+                    const list = await listResponse.json();
+
+                    // Step 2: fetch the FULL design object for each one (this is where
+                    // fields/html/css/js/defaults actually live). The list endpoint alone
+                    // only returns {id, label}, which is why fields never showed up.
+                    const fullDesigns = await Promise.all(
+                        list.map(async (item) => {
+                            try {
+                                const detailResponse = await fetch(`${API_BASE}/api/sections/${sectionType}/${item.id}`);
+                                if (!detailResponse.ok) throw new Error(`HTTP ${detailResponse.status}`);
+                                return await detailResponse.json();
+                            } catch (err) {
+                                console.warn(`Failed to fetch design detail ${sectionType}/${item.id}:`, err);
+                                return null;
+                            }
+                        })
+                    );
+
+                    return fullDesigns.filter(Boolean);
+                } catch (error) {
+                    console.warn(`Failed to fetch ${sectionType}:`, error);
+                    return [];
+                }
+            }
+
+            async fetchAllSectionDesigns() {
+                const sectionTypes = ['hero', 'countdown', 'dresscode', 'events', 'lovestory', 'gallery', 'venue', 'rsvp', 'music', 'scratch'];
+                const results = {};
+                for (const type of sectionTypes) {
+                    results[type] = await this.fetchSectionDesigns(type);
+                }
+                return results;
+            }
+
+            async fetchOpeningDesigns() {
+                // Cover animations load exactly like every other section: from
+                // sections/cover/*.js on the server (e.g. design3.js - Door Reveal).
+                // No presets/fallbacks - whatever is in that folder is what shows up.
+                const designs = await this.fetchSectionDesigns('cover');
+
+                // Normalize so every design exposes .fields / .defaults, in case any
+                // design file happens to use the older variable_schema/default_values names.
+                return designs.map((d) => ({
+                    ...d,
+                    fields: d.fields || d.variable_schema || [],
+                    defaults: d.defaults || d.default_values || {}
+                }));
+            }
+
+            async saveCard(cardData) {
+                console.log('📦 Card saved:', cardData);
+                return { success: true, id: 'card-' + Date.now(), slug: 'atharv-vanya-' + Date.now() };
+            }
+        }
+
+        // ==========================================
+        // APP STATE
+        // ==========================================
+        const AppState = {
+            theme: 'maroon',
+            selectedSections: [],
+            sectionOrder: [],
+            sectionData: {},
+            sectionAiCss: {}, // sectionType -> css string patched by AI colorUpdates/animationUpdates
+            selectedOpening: null,
+            openingContent: {},
+            openingAiCss: null, // css string patched by AI colorUpdates/animationUpdates for the cover
+            font: "'Great Vibes',cursive",
+            cardId: null,
+            sectionDesigns: {},
+            openingDesigns: [],
+            pageEffects: {
+                bgColor: '#FAF5E8',
+                bgImage: '',
+                bgStyle: 'solid',
+                particles: false,
+                particleCount: 80,
+                particleSize: 3,
+                particleSpeed: 3,
+                particleColor: '#D4AF37',
+                scrollEffect: 'none',
+                scrollSpeed: 5,
+                primaryColor: '#7A1C2E',
+                goldColor: '#D4AF37',
+                textColor: '#2C2520',
+                font: "'Great Vibes',cursive",
+                fontSize: 16,
+                lineHeight: 1.6,
+                contentWidth: '100%',
+                contentAlign: 'center',
+                sectionSpacing: 40
+            }
+        };
+
+        // ==========================================
+        // UI RENDERER
+        // ==========================================
+        // Every hand-written template (sections/*/template-*.js) declares its
+        // palette as a `colors` object (e.g. { '--bg-page': '#1a0505', ... })
+        // and its `css` references those same custom properties (var(--bg-page)).
+        // The template files never define the variables themselves - they expect
+        // whoever renders the template to put them on :root first. Without this,
+        // every var(--...) in the CSS resolves to nothing, so sections render
+        // with no backgrounds/colors (i.e. "blank and broken").
+        function colorsToRootCss(colors) {
+            if (!colors || typeof colors !== 'object') return '';
+            const decls = Object.keys(colors).map((key) => `${key}: ${colors[key]};`).join(' ');
+            return decls ? `:root { ${decls} }` : '';
+        }
+
+        const UIRenderer = {
+            db: new DatabaseAPI(),
+
+            async init() {
+                try {
+                    // Load all section designs from the server
+                    AppState.sectionDesigns = await this.db.fetchAllSectionDesigns();
+                    AppState.openingDesigns = await this.db.fetchOpeningDesigns();
+
+                    // Initialize with default sections
+                    const defaultSections = ['hero', 'countdown', 'dresscode', 'events', 'lovestory', 'gallery', 'venue', 'rsvp', 'music', 'scratch'];
+                    AppState.selectedSections = defaultSections;
+                    AppState.sectionOrder = defaultSections;
+
+                    // Initialize section data with defaults from DB
+                    Object.keys(AppState.sectionDesigns).forEach(sectionType => {
+                        const designs = AppState.sectionDesigns[sectionType];
+                        if (designs && designs.length > 0) {
+                            if (!AppState.sectionData[sectionType]) {
+                                AppState.sectionData[sectionType] = {
+                                    designId: designs[0].id,
+                                    content: { ...designs[0].defaults || {} }
+                                };
+                            }
+                        }
+                    });
+
+                    // Set default opening
+                    if (AppState.openingDesigns.length > 0) {
+                        AppState.selectedOpening = AppState.openingDesigns[0].id;
+                        AppState.openingContent = { ...(AppState.openingDesigns[0].defaults || {}) };
+                    }
+
+                    this.renderStep1();
+                    this.renderStep3();
+                    this.setupDragAndDrop();
+                    this.updateOpeningPreviewFrame();
+                    this.updatePageEffects();
+                } catch (error) {
+                    console.error('Failed to initialize:', error);
+                    alert('Failed to load data. Please ensure the server is running.');
+                }
+            },
+
+            renderStep1() {
+                const grid = document.getElementById('sectionsGrid');
+                grid.innerHTML = '';
+
+                const sectionTypes = Object.keys(AppState.sectionDesigns);
+
+                sectionTypes.forEach(sectionType => {
+                    const designs = AppState.sectionDesigns[sectionType] || [];
+                    const isRequired = sectionType === 'hero';
+                    const isActive = AppState.selectedSections.includes(sectionType);
+
+                    const div = document.createElement('div');
+                    div.className = `section-toggle ${isActive ? 'active' : ''} ${isRequired ? 'required' : ''}`;
+                    div.dataset.section = sectionType;
+
+                    const icons = {
+                        hero: '💒', countdown: '⏱️', dresscode: '👗', events: '🎉', lovestory: '💕',
+                        gallery: '🖼️', venue: '📍', rsvp: '💌', music: '🎵', scratch: '📝'
+                    };
+
+                    const labelMap = {
+                        hero: 'Hero', countdown: 'Countdown', dresscode: 'Dress Code', events: 'Events', 
+                        lovestory: 'Love Story', gallery: 'Gallery', venue: 'Venue',
+                        rsvp: 'RSVP', music: 'Music', scratch: 'Scratchpad'
+                    };
+
+                    div.innerHTML = `<span>${icons[sectionType] || '📄'}</span> ${labelMap[sectionType] || sectionType} <span class="check"><i class="fas fa-check-circle"></i></span>`;
+
+                    if (!isRequired) {
+                        div.onclick = () => this.toggleSection(sectionType, div);
+                    }
+
+                    grid.appendChild(div);
+                });
+
+                this.renderReorderList();
+            },
+
+            renderReorderList() {
+                const list = document.getElementById('reorderList');
+                list.innerHTML = '';
+
+                const icons = {
+                    hero: '💒', countdown: '⏱️', dresscode: '👗', events: '🎉', lovestory: '💕',
+                    gallery: '🖼️', venue: '📍', rsvp: '💌', music: '🎵', scratch: '📝'
+                };
+
+                const labelMap = {
+                    hero: 'Hero', countdown: 'Countdown', dresscode: 'Dress Code', events: 'Events', 
+                    lovestory: 'Love Story', gallery: 'Gallery', venue: 'Venue',
+                    rsvp: 'RSVP', music: 'Music', scratch: 'Scratchpad'
+                };
+
+                AppState.sectionOrder.forEach(sectionType => {
+                    const isRequired = sectionType === 'hero';
+                    const div = document.createElement('div');
+                    div.className = 'reorder-item';
+                    div.draggable = true;
+                    div.dataset.section = sectionType;
+
+                    div.innerHTML = `
+                        <span class="drag-handle"><i class="fas fa-grip-lines"></i></span>
+                        <span class="item-name">${icons[sectionType] || '📄'} ${labelMap[sectionType] || sectionType}</span>
+                        ${isRequired ? '<span class="item-badge required">Required</span>' : ''}
+                        <button class="item-remove ${isRequired ? 'disabled' : ''}" onclick="UIRenderer.removeSection('${sectionType}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+
+                    list.appendChild(div);
+                });
+
+                this.setupDragAndDrop();
+            },
+
+            removeSection(sectionType) {
+                if (sectionType === 'hero') return;
+                AppState.selectedSections = AppState.selectedSections.filter(s => s !== sectionType);
+                AppState.sectionOrder = AppState.sectionOrder.filter(s => s !== sectionType);
+                this.renderStep1();
+                const stepPanel = document.querySelector('.step-panel[data-step="1"]');
+                if (stepPanel && stepPanel.classList.contains('active')) {
+                    this.renderStep2();
+                }
+            },
+
+            toggleSection(sectionType, toggleEl) {
+                if (sectionType === 'hero') return;
+
+                const isActive = toggleEl.classList.contains('active');
+                if (isActive) {
+                    AppState.selectedSections = AppState.selectedSections.filter(s => s !== sectionType);
+                    AppState.sectionOrder = AppState.sectionOrder.filter(s => s !== sectionType);
+                    toggleEl.classList.remove('active');
+                } else {
+                    AppState.selectedSections.push(sectionType);
+                    AppState.sectionOrder.push(sectionType);
+                    toggleEl.classList.add('active');
+                }
+
+                this.renderReorderList();
+            },
+
+            setupDragAndDrop() {
+                let dragSrc = null;
+                document.querySelectorAll('.reorder-item').forEach(item => {
+                    item.addEventListener('dragstart', function(e) {
+                        dragSrc = this;
+                        e.dataTransfer.effectAllowed = 'move';
+                        this.style.opacity = '0.4';
+                    });
+                    item.addEventListener('dragend', function() { this.style.opacity = '1'; });
+                    item.addEventListener('dragover', function(e) { e.preventDefault(); });
+                    item.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        if (dragSrc !== this) {
+                            const dragKey = dragSrc.dataset.section;
+                            const dropKey = this.dataset.section;
+                            const arr = AppState.sectionOrder;
+                            const dragIdx = arr.indexOf(dragKey);
+                            const dropIdx = arr.indexOf(dropKey);
+                            arr.splice(dragIdx, 1);
+                            arr.splice(dropIdx, 0, dragKey);
+                            AppState.sectionOrder = arr;
+                            UIRenderer.renderReorderList();
+                        }
+                    });
+                });
+            },
+
+            async renderStep2() {
+                const container = document.getElementById('sectionDesignsContainer');
+                container.innerHTML = '';
+
+                for (const sectionType of AppState.sectionOrder) {
+                    const designs = AppState.sectionDesigns[sectionType] || [];
+                    if (designs.length === 0) continue;
+
+                    const currentData = AppState.sectionData[sectionType] || { designId: designs[0].id, content: {} };
+                    const design = designs.find(d => d.id === currentData.designId) || designs[0];
+
+                    const card = document.createElement('div');
+                    card.className = 'section-design-card';
+
+                    let fieldsHTML = '';
+                    if (design.fields && Array.isArray(design.fields)) {
+                        fieldsHTML = this.renderDynamicFields(sectionType, design.fields, currentData.content);
+                    } else {
+                        fieldsHTML = '<div style="color:var(--text-muted);font-style:italic;">No editable fields for this design.</div>';
+                    }
+
+                    const icons = {
+                        hero: '💒', countdown: '⏱️', dresscode: '👗', events: '🎉', lovestory: '💕',
+                        gallery: '🖼️', venue: '📍', rsvp: '💌', music: '🎵', scratch: '📝'
+                    };
+
+                    const labelMap = {
+                        hero: 'Hero', countdown: 'Countdown', dresscode: 'Dress Code', events: 'Events', 
+                        lovestory: 'Love Story', gallery: 'Gallery', venue: 'Venue',
+                        rsvp: 'RSVP', music: 'Music', scratch: 'Scratchpad'
+                    };
+
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="section-name"><span>${icons[sectionType] || '📄'}</span> ${labelMap[sectionType] || sectionType} ${sectionType === 'hero' ? '<span class="item-badge required" style="margin-left:8px;">Required</span>' : ''}</div>
+                            <select style="padding:6px 12px;border-radius:8px;border:2px solid var(--champagne-dark);font-family:var(--font-body);"
+                                onchange="UIRenderer.updateDesign('${sectionType}', this.value)">
+                                ${designs.map(d => `<option value="${d.id}" ${d.id === currentData.designId ? 'selected' : ''}>${d.label}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div class="design-controls">
+                                <label style="font-weight:600;color:var(--primary-maroon);">✏️ Content & Media</label>
+                                ${fieldsHTML}
+                            </div>
+                            <div class="preview-box">
+                                <div class="preview-frame" id="preview-${sectionType}">
+                                    <span style="text-align:center;padding:10px;">${icons[sectionType] || '📄'}<br>Preview of ${sectionType}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ai-section">
+                            <div class="ai-prompt-group" id="aiPromptGroup-${sectionType}">
+                                <label>✨ AI Generate New Design <span style="font-size:0.7rem;color:#999;font-weight:normal;">(type @ to tag templates)</span></label>
+                                <div id="taggedTemplates-${sectionType}" style="display:flex;flex-wrap:wrap;margin-bottom:6px;"></div>
+                                <input type="text" class="ai-prompt-input" placeholder="e.g., Add floral borders with gold accents" id="aiPrompt-${sectionType}" autocomplete="off" />
+                                <div class="template-suggestions" id="templateSuggestions-${sectionType}"></div>
+                            </div>
+                            <button class="ai-generate-btn" onclick="UIRenderer.generateSectionAI('${sectionType}')"><i class="fas fa-wand-magic-sparkles"></i> Generate</button>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+
+                    // Initialize template tagging for this section
+                    this.initTemplateTagging(sectionType);
+
+                    // Render preview
+                    this.renderSectionPreview(sectionType, design);
+                }
+            },
+
+            renderSectionPreview(sectionType, design) {
+                const previewContainer = document.getElementById(`preview-${sectionType}`);
+                if (!previewContainer) return;
+
+                const content = AppState.sectionData[sectionType]?.content || {};
+                const effects = AppState.pageEffects;
+
+                // Build the preview HTML
+                let html = design.html || '';
+                Object.keys(content).forEach(key => {
+                    const value = content[key] || '';
+                    html = html.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), value);
+                });
+
+                // Wrap with styles and typography controls
+                const effectiveCss = AppState.sectionAiCss[sectionType] || design.css || '';
+                const rootCss = colorsToRootCss(design.colors);
+                const fullDoc = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            ${rootCss}
+                            ${effectiveCss}
+                            body {
+                                font-size: ${effects.fontSize}px;
+                                line-height: ${effects.lineHeight};
+                                max-width: ${effects.contentWidth};
+                                margin: 0 auto;
+                                text-align: ${effects.contentAlign};
+                                color: ${effects.textColor};
+                                padding: ${effects.sectionSpacing}px 16px;
+                            }
+                            /* Ensure content adapts to screen */
+                            * { max-width: 100%; box-sizing: border-box; }
+                            img { max-width: 100%; height: auto; }
+                        </style>
+                    </head>
+                    <body>
+                        ${html}
+                        ${design.js ? `<script>${design.js}<\/script>` : ''}
+                    </body>
+                    </html>
+                `;
+
+                // Use iframe for preview
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(iframe);
+                iframe.srcdoc = fullDoc;
+            },
+
+            renderDynamicFields(sectionType, schema, content) {
+                if (!Array.isArray(schema)) return '';
+
+                let html = '';
+                for (const field of schema) {
+                    const val = content[field.key] || '';
+
+                    if (field.type === 'text' || field.type === 'date' || field.type === 'time') {
+                        html += `<div><label class="field-label">${field.label}</label><input type="${field.type}" value="${val}" onchange="UIRenderer.updateContent('${sectionType}', '${field.key}', this.value)" /></div>`;
+                    } else if (field.type === 'url') {
+                        // Cover/opening fields have no working image slot to upload into
+                        // (AppState.sectionData['__opening__'] is never populated), so only
+                        // show the plain URL box there — no device-upload button.
+                        const showDeviceUpload = sectionType !== '__opening__';
+                        html += `
+                            <div class="image-upload-group">
+                                <label class="image-upload-label">${field.label}</label>
+                                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                                    <input type="url" value="${val}" placeholder="https://example.com/image.jpg" onchange="UIRenderer.updateContent('${sectionType}', '${field.key}', this.value)" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--champagne-dark);" />
+                                </div>
+                                ${showDeviceUpload ? `
+                                <div class="file-input-wrapper" data-upload-status="${sectionType}-${field.key}">
+                                    <div class="file-input-btn"><i class="fas fa-cloud-upload-alt"></i> Upload Image from Device</div>
+                                    <input type="file" accept="image/*" data-field-key="${field.key}" onchange="UIRenderer.uploadImageToImgbb('${sectionType}', '${field.key}', this)" />
+                                </div>` : ''}
+                                ${val ? `
+                                <div class="image-preview-container">
+                                    <div class="preview-thumb-item">
+                                        <img src="${val}" />
+                                        <button class="remove-img" onclick="UIRenderer.removeImage('${sectionType}', '${field.key}', 0, false)">×</button>
+                                    </div>
+                                </div>` : ''}
+                            </div>
+                        `;
+                    } else if (field.type === 'textarea') {
+                        html += `<div><label class="field-label">${field.label}</label><textarea rows="3" onchange="UIRenderer.updateContent('${sectionType}', '${field.key}', this.value)">${val}</textarea></div>`;
+                    } else if (field.type === 'chips') {
+                        const options = field.options || [];
+                        const current = val || options[0];
+                        html += `<div>
+                            <label class="field-label">${field.label}</label>
+                            <div class="option-chips">
+                                ${options.map(opt => `<div class="option-chip ${opt === current ? 'active' : ''}" onclick="UIRenderer.selectChip('${sectionType}','${field.key}','${opt}',this)">${opt}</div>`).join('')}
+                            </div>
+                        </div>`;
+                    } else if (field.type === 'image' || field.type === 'images' || field.type === 'audio') {
+                        const isMulti = field.type === 'images';
+                        const isAudio = field.type === 'audio';
+                        const images = isMulti ? (Array.isArray(val) ? val : []) : (val ? [val] : []);
+
+                        html += `
+                            <div class="image-upload-group">
+                                <label class="image-upload-label">${field.label}</label>
+                                <div class="file-input-wrapper">
+                                    <div class="file-input-btn"><i class="fas fa-cloud-upload-alt"></i> Choose ${isMulti ? 'Files' : (isAudio ? 'Audio' : 'Image')}</div>
+                                    <input type="file" ${isMulti ? 'multiple' : ''} accept="${isAudio ? 'audio/*' : 'image/*'}" onchange="UIRenderer.handleImageUpload('${sectionType}', '${field.key}', this, ${isMulti})" />
+                                </div>
+                                <div class="image-preview-container" id="preview-container-${sectionType}-${field.key}">
+                                    ${images.map((img, idx) => `
+                                        <div class="preview-thumb-item">
+                                            ${isAudio ? `<i class="fas fa-music" style="font-size:1.5rem;color:var(--primary-maroon);padding:20px;"></i>` : `<img src="${img}" />`}
+                                            <button class="remove-img" onclick="UIRenderer.removeImage('${sectionType}', '${field.key}', ${idx}, ${isMulti})">×</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                return html;
+            },
+
+            selectChip(sectionType, fieldKey, value, el) {
+                el.parentElement.querySelectorAll('.option-chip').forEach(c => c.classList.remove('active'));
+                el.classList.add('active');
+                this.updateContent(sectionType, fieldKey, value);
+            },
+
+            updateContent(sectionType, fieldKey, value) {
+                if (!AppState.sectionData[sectionType]) {
+                    AppState.sectionData[sectionType] = { content: {} };
+                }
+                AppState.sectionData[sectionType].content[fieldKey] = value;
+                // Update preview
+                const designs = AppState.sectionDesigns[sectionType] || [];
+                const design = designs.find(d => d.id === AppState.sectionData[sectionType]?.designId);
+                if (design) {
+                    this.renderSectionPreview(sectionType, design);
+                }
+            },
+
+            updateDesign(sectionType, designId) {
+                if (!AppState.sectionData[sectionType]) {
+                    AppState.sectionData[sectionType] = { content: {} };
+                }
+                AppState.sectionData[sectionType].designId = designId;
+                this.renderStep2();
+            },
+
+            handleImageUpload(sectionType, fieldKey, input, isMulti) {
+                const files = Array.from(input.files);
+                if (!files.length) return;
+
+                const processFile = (file) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if (!AppState.sectionData[sectionType].content[fieldKey]) {
+                            AppState.sectionData[sectionType].content[fieldKey] = isMulti ? [] : '';
+                        }
+                        if (isMulti) {
+                            AppState.sectionData[sectionType].content[fieldKey].push(e.target.result);
+                        } else {
+                            AppState.sectionData[sectionType].content[fieldKey] = e.target.result;
+                        }
+                        this.renderStep2();
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                if (isMulti) {
+                    files.forEach(processFile);
+                } else {
+                    processFile(files[0]);
+                }
+            },
+
+            async uploadImageToImgbb(sectionType, fieldKey, input) {
+                const file = input.files && input.files[0];
+                if (!file) return;
+
+                const wrapper = input.closest('.file-input-wrapper');
+                const btn = wrapper ? wrapper.querySelector('.file-input-btn') : null;
+                const originalBtnHTML = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+
+                    const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
+                    const data = await res.json().catch(() => ({}));
+
+                    if (!res.ok || !data.url) {
+                        throw new Error(data.error || `Upload failed (${res.status})`);
+                    }
+
+                    this.updateContent(sectionType, fieldKey, data.url);
+                    // Re-render so the URL box and preview thumbnail reflect the new hosted image
+                    this.renderStep2();
+                } catch (err) {
+                    console.error('imgbb upload failed:', err);
+                    alert(`Image upload failed: ${err.message}`);
+                    if (btn) btn.innerHTML = originalBtnHTML;
+                } finally {
+                    input.value = '';
+                }
+            },
+
+            removeImage(sectionType, fieldKey, index, isMulti) {
+                if (isMulti) {
+                    AppState.sectionData[sectionType].content[fieldKey].splice(index, 1);
+                } else {
+                    AppState.sectionData[sectionType].content[fieldKey] = '';
+                }
+                this.renderStep2();
+            },
+
+            // Template tagging system for @ mentions
+            templateTagState: {},
+            
+            initTemplateTagging(sectionType) {
+                this.templateTagState[sectionType] = {
+                    taggedTemplates: [],
+                    isShowingSuggestions: false,
+                    lastCaretPosition: 0
+                };
+                
+                const input = document.getElementById(`aiPrompt-${sectionType}`);
+                const suggestionsBox = document.getElementById(`templateSuggestions-${sectionType}`);
+                const taggedContainer = document.getElementById(`taggedTemplates-${sectionType}`);
+                
+                if (!input || !suggestionsBox) return;
+                
+                // Input event handler
+                input.addEventListener('input', (e) => this.handleTemplateInput(e, sectionType));
+                input.addEventListener('keydown', (e) => this.handleTemplateKeydown(e, sectionType));
+                input.addEventListener('click', () => this.checkForAtSymbol(sectionType));
+                input.addEventListener('blur', () => setTimeout(() => this.hideSuggestions(sectionType), 200));
+                
+                // Render initial tagged templates
+                this.renderTaggedTemplates(sectionType);
+            },
+            
+            handleTemplateInput(e, sectionType) {
+                const cursorPos = e.target.selectionStart;
+                const text = e.target.value;
+                const state = this.templateTagState[sectionType];
+                
+                state.lastCaretPosition = cursorPos;
+                
+                // Check if we're after an @ symbol
+                const beforeCursor = text.substring(0, cursorPos);
+                const atMatch = beforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+                
+                if (atMatch) {
+                    const query = atMatch[1].toLowerCase();
+                    this.showTemplateSuggestions(sectionType, query);
+                } else {
+                    this.hideSuggestions(sectionType);
+                }
+            },
+            
+            handleTemplateKeydown(e, sectionType) {
+                const state = this.templateTagState[sectionType];
+                const suggestionsBox = document.getElementById(`templateSuggestions-${sectionType}`);
+                
+                if (!state.isShowingSuggestions) return;
+                
+                const selectedEl = suggestionsBox.querySelector('.template-suggestion-item.selected');
+                
+                if (e.key === 'Enter') {
+                    if (selectedEl) {
+                        e.preventDefault();
+                        this.selectTemplate(sectionType, selectedEl.dataset.templateId);
+                    }
+                } else if (e.key === 'Escape') {
+                    this.hideSuggestions(sectionType);
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    this.moveSelection(suggestionsBox, 1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.moveSelection(suggestionsBox, -1);
+                }
+            },
+            
+            checkForAtSymbol(sectionType) {
+                const input = document.getElementById(`aiPrompt-${sectionType}`);
+                if (!input) return;
+                
+                const cursorPos = input.selectionStart;
+                const text = input.value;
+                const beforeCursor = text.substring(0, cursorPos);
+                const atMatch = beforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+                
+                if (atMatch) {
+                    this.showTemplateSuggestions(sectionType, atMatch[1].toLowerCase());
+                }
+            },
+            
+            showTemplateSuggestions(sectionType, query = '') {
+                const state = this.templateTagState[sectionType];
+                const suggestionsBox = document.getElementById(`templateSuggestions-${sectionType}`);
+                
+                if (!suggestionsBox) return;
+                
+                // Get all available designs for this section type
+                const allDesigns = AppState.sectionDesigns[sectionType] || [];
+                
+                // Filter by query
+                const filtered = allDesigns.filter(d => 
+                    d.id.toLowerCase().includes(query) || 
+                    d.label.toLowerCase().includes(query)
+                );
+                
+                if (filtered.length === 0) {
+                    this.hideSuggestions(sectionType);
+                    return;
+                }
+                
+                // Render suggestions
+                suggestionsBox.innerHTML = filtered.map((d, i) => `
+                    <div class="template-suggestion-item ${i === 0 ? 'selected' : ''}" 
+                         data-template-id="${d.id}"
+                         onclick="UIRenderer.selectTemplate('${sectionType}', '${d.id}')">
+                        <span class="template-id">@${d.id}</span>
+                        <span class="template-label">${d.label}</span>
+                    </div>
+                `).join('');
+                
+                suggestionsBox.classList.add('active');
+                state.isShowingSuggestions = true;
+            },
+            
+            hideSuggestions(sectionType) {
+                const state = this.templateTagState[sectionType];
+                const suggestionsBox = document.getElementById(`templateSuggestions-${sectionType}`);
+                
+                if (suggestionsBox) {
+                    suggestionsBox.classList.remove('active');
+                }
+                state.isShowingSuggestions = false;
+            },
+            
+            moveSelection(container, direction) {
+                const items = container.querySelectorAll('.template-suggestion-item');
+                if (items.length === 0) return;
+                
+                const current = container.querySelector('.template-suggestion-item.selected');
+                let newIndex = direction > 0 ? 0 : items.length - 1;
+                
+                if (current) {
+                    const currentIndex = Array.from(items).indexOf(current);
+                    newIndex = currentIndex + direction;
+                    if (newIndex < 0) newIndex = items.length - 1;
+                    if (newIndex >= items.length) newIndex = 0;
+                }
+                
+                items.forEach((item, i) => {
+                    item.classList.toggle('selected', i === newIndex);
+                });
+            },
+            
+            selectTemplate(sectionType, templateId) {
+                const state = this.templateTagState[sectionType];
+                const input = document.getElementById(`aiPrompt-${sectionType}`);
+                const suggestionsBox = document.getElementById(`templateSuggestions-${sectionType}`);
+                
+                if (!input) return;
+                
+                // Add to tagged templates if not already there
+                if (!state.taggedTemplates.includes(templateId)) {
+                    state.taggedTemplates.push(templateId);
+                    this.renderTaggedTemplates(sectionType);
+                }
+                
+                // Remove the @mention from input
+                const cursorPos = input.selectionStart;
+                const text = input.value;
+                const beforeCursor = text.substring(0, cursorPos);
+                const atMatch = beforeCursor.match(/@(.*?)([\\s,.;!?]|$)/);
+                
+                if (atMatch) {
+                    const startPos = cursorPos - atMatch[1].length - 1;
+                    const endPos = startPos + atMatch[0].length;
+                    const newText = text.substring(0, startPos) + text.substring(endPos);
+                    input.value = newText;
+                    input.selectionStart = input.selectionEnd = startPos;
+                }
+                
+                this.hideSuggestions(sectionType);
+                input.focus();
+            },
+            
+            removeTaggedTemplate(sectionType, templateId) {
+                const state = this.templateTagState[sectionType];
+                state.taggedTemplates = state.taggedTemplates.filter(id => id !== templateId);
+                this.renderTaggedTemplates(sectionType);
+            },
+            
+            renderTaggedTemplates(sectionType) {
+                const state = this.templateTagState[sectionType];
+                const container = document.getElementById(`taggedTemplates-${sectionType}`);
+                const allDesigns = AppState.sectionDesigns[sectionType] || [];
+                
+                if (!container) return;
+                
+                container.innerHTML = state.taggedTemplates.map(id => {
+                    const design = allDesigns.find(d => d.id === id);
+                    const label = design ? design.label : id;
+                    return `
+                        <span class="template-tag" onclick="UIRenderer.removeTaggedTemplate('${sectionType}', '${id}')">
+                            @${id}
+                            <span class="remove-tag">×</span>
+                        </span>
+                    `;
+                }).join('');
+            },
+            
+            getTaggedTemplates(sectionType) {
+                return this.templateTagState[sectionType]?.taggedTemplates || [];
+            },
+
+            async generateSectionAI(sectionType) {
+                const promptInput = document.getElementById(`aiPrompt-${sectionType}`);
+                let promptText = promptInput ? promptInput.value.trim() : '';
+                const taggedTemplates = this.getTaggedTemplates(sectionType);
+
+                if (!promptText) {
+                    alert('Describe what you want to change about this section first.');
+                    return;
+                }
+
+                const currentData = AppState.sectionData[sectionType];
+                const designs = AppState.sectionDesigns[sectionType] || [];
+                const design = designs.find(d => d.id === currentData?.designId);
+
+                if (!design) {
+                    alert('Select a design for this section first, then ask AI to edit it.');
+                    return;
+                }
+
+                // @-tagged templates are style inspiration only — the AI never
+                // touches their markup, it just gets a hint of the look you're
+                // going for while it edits the currently selected design above.
+                if (taggedTemplates.length > 0) {
+                    promptText += ` (take style inspiration from: ${taggedTemplates.join(', ')}, but only edit the current design's own text/colors)`;
+                }
+
+                const genBtn = promptInput ? promptInput.closest('.ai-section')?.querySelector('.ai-generate-btn') : null;
+                const originalBtnHTML = genBtn ? genBtn.innerHTML : '';
+                if (genBtn) {
+                    genBtn.disabled = true;
+                    genBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                }
+
+                try {
+                    const { updates, dropped, result } = await AiStreamLog.streamGenerate({
+                        sectionType,
+                        prompt: promptText,
+                        currentContent: currentData.content || {},
+                        templateId: design.id,
+                    }, `${sectionType} edit`);
+
+                    // Merge the AI's text updates straight into this section's
+                    // content — same place manual field edits live — so the
+                    // editable-fields form and every future re-render pick them
+                    // up automatically. No new design object is created.
+                    if (updates.textUpdates) {
+                        Object.assign(currentData.content, updates.textUpdates);
+                    }
+
+                    // Store the merged stylesheet (existing CSS variables/ids
+                    // patched with the AI's color + animation updates) as an
+                    // override for this section, without touching html/js.
+                    if (result?.css) {
+                        AppState.sectionAiCss[sectionType] = result.css;
+                    }
+
+                    if (dropped && (dropped.textUpdates?.length || dropped.colorUpdates?.length || dropped.animationUpdates?.length)) {
+                        console.warn(`AI referenced fields/colors/elements that don't exist on "${design.id}" and were ignored:`, dropped);
+                    }
+
+                    if (promptInput) promptInput.value = '';
+                    this.templateTagState[sectionType] = { taggedTemplates: [], suggestionIndex: -1 };
+                    this.renderStep2();
+                } catch (error) {
+                    console.error('AI generation failed:', error);
+                    alert(`AI generation failed: ${error.message}`);
+                } finally {
+                    if (genBtn) {
+                        genBtn.disabled = false;
+                        genBtn.innerHTML = originalBtnHTML;
+                    }
+                }
+            },
+
+            async saveAiDesign(sectionType, design, prompt) {
+                try {
+                    const res = await fetch('/api/ai/save-section', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sectionType, design, prompt }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Save failed');
+
+                    // Refresh this section's design list from the server so the new
+                    // AI design shows up in the dropdown, then select it.
+                    AppState.sectionDesigns[sectionType] = await this.db.fetchSectionDesigns(sectionType);
+                    this.updateDesign(sectionType, design.id);
+                } catch (error) {
+                    console.error('Saving AI design failed:', error);
+                    alert(`Design was generated but could not be saved: ${error.message}`);
+                }
+            },
+
+            renderStep3() {
+                // Populate dropdown with all available cover designs from sections/cover
+                const select = document.getElementById('coverDesignSelect');
+                if (!select) return;
+                
+                select.innerHTML = '<option value="">-- Select a cover design --</option>';
+                
+                if (!AppState.openingDesigns || AppState.openingDesigns.length === 0) {
+                    select.innerHTML += '<option value="" disabled>No designs available</option>';
+                    this.renderOpeningFields();
+                    this.updateOpeningPreviewFrame();
+                    return;
+                }
+
+                AppState.openingDesigns.forEach(op => {
+                    const option = document.createElement('option');
+                    option.value = op.id;
+                    option.textContent = op.label;
+                    if (AppState.selectedOpening === op.id) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+
+                this.renderOpeningFields();
+                this.updateOpeningPreviewFrame();
+            },
+
+            selectCoverDesign(designId) {
+                if (!designId) return;
+                const op = AppState.openingDesigns.find(o => o.id === designId);
+                if (!op) return;
+                
+                AppState.selectedOpening = op.id;
+                AppState.openingContent = { ...(op.defaults || {}) };
+                this.renderOpeningFields();
+                this.updateOpeningPreviewFrame();
+            },
+
+            renderOpeningFields() {
+                const container = document.getElementById('openingFieldsContainer');
+                if (!container) return;
+
+                const op = AppState.openingDesigns.find(o => o.id === AppState.selectedOpening);
+                container.innerHTML = '';
+                if (!op) return;
+
+                const heading = document.createElement('label');
+                heading.style.cssText = 'font-weight:600;color:var(--primary-maroon);display:block;margin-bottom:10px;';
+                heading.textContent = '✏️ Cover Content';
+                container.appendChild(heading);
+
+                if (!op.fields || op.fields.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'color:var(--text-muted);font-style:italic;font-size:0.85rem;';
+                    empty.textContent = 'This cover design has no editable fields.';
+                    container.appendChild(empty);
+                    return;
+                }
+
+                container.innerHTML += this.renderDynamicFields('__opening__', op.fields, AppState.openingContent);
+                
+                // Wire up file inputs for opening section
+                container.querySelectorAll('input[type="file"]').forEach((el) => {
+                    el.addEventListener('change', (e) => {
+                        const fieldKey = el.getAttribute('data-field-key');
+                        if (fieldKey) {
+                            this.handleImageUpload('__opening__', fieldKey, el, false);
+                        }
+                    });
+                });
+                
+                // Wire up text/date/url inputs
+                container.querySelectorAll('input:not([type="file"]), textarea').forEach((el) => {
+                    const attr = el.getAttribute('onchange') || '';
+                    const match = attr.match(/updateContent\('__opening__',\s*'([^']+)'/);
+                    if (match) {
+                        el.removeAttribute('onchange');
+                        el.addEventListener('change', (e) => this.updateOpeningContent(match[1], e.target.value));
+                    }
+                });
+            },
+
+            updateOpeningContent(key, value) {
+                AppState.openingContent[key] = value;
+                this.updateOpeningPreviewFrame();
+            },
+
+            updateOpeningPreviewFrame() {
+                const iframe = document.getElementById('openingPreviewFrame');
+                if (!iframe) return;
+                const op = AppState.openingDesigns.find(o => o.id === AppState.selectedOpening);
+                if (!op) {
+                    iframe.srcdoc = `<!DOCTYPE html><html><body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#1a0505;color:#a08575;font-family:sans-serif;font-size:0.8rem;text-align:center;padding:20px;">No cover design selected</body></html>`;
+                    return;
+                }
+
+                const heroData = AppState.sectionData.hero?.content || {};
+                const content = {
+                    names: `${heroData.brideName || 'A'} & ${heroData.groomName || 'V'}`,
+                    brideName: heroData.brideName || 'Aanya',
+                    groomName: heroData.groomName || 'Rohan',
+                    ...AppState.openingContent
+                };
+
+                let html = op.html || '';
+                Object.keys(content).forEach((key) => {
+                    html = html.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), content[key] ?? '');
+                });
+
+                iframe.srcdoc = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8" />
+                        <style>
+                            html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; }
+                            ${colorsToRootCss(op.colors)}
+                            ${AppState.openingAiCss || op.css || ''}
+                        </style>
+                    </head>
+                    <body>
+                        ${html}
+                        ${op.js ? `<script>${op.js}<\/script>` : ''}
+                    </body>
+                    </html>
+                `;
+            },
+
+            renderStep4() {
+                const doc = this.buildPreviewDocument();
+                document.getElementById('mobilePreview').srcdoc = doc;
+                document.getElementById('desktopPreview').srcdoc = doc;
+            },
+
+            replayPreview(iframeId) {
+                const iframe = document.getElementById(iframeId);
+                if (!iframe) return;
+                const doc = iframe.srcdoc;
+                iframe.srcdoc = '';
+                // Force the browser to treat this as a fresh document so entry
+                // animations, countdown timers, and section scripts restart.
+                requestAnimationFrame(() => { iframe.srcdoc = doc; });
+            },
+
+            buildPreviewDocument() {
+                const effects = AppState.pageEffects;
+                let sectionsHTML = '';
+                let sectionsCSS = '';
+                let sectionsJS = '';
+
+                AppState.sectionOrder.forEach(sectionType => {
+                    const designs = AppState.sectionDesigns[sectionType] || [];
+                    const design = designs.find(d => d.id === AppState.sectionData[sectionType]?.designId);
+                    if (!design) return;
+
+                    const content = AppState.sectionData[sectionType]?.content || {};
+
+                    // Section CSS + scroll-effect classes
+                    // Colors are scoped to this section's own wrapper element
+                    // (rather than :root) because every template reuses the same
+                    // variable names (--bg-page, --accent-gold, etc.) - if two
+                    // sections use different templates, a global :root would let
+                    // whichever section's colors are declared last win for the
+                    // whole page instead of each section keeping its own palette.
+                    const sectionColorsCss = design.colors
+                        ? `#section-${sectionType} { ${Object.keys(design.colors).map((k) => `${k}: ${design.colors[k]};`).join(' ')} }`
+                        : '';
+                    let sectionCSS = sectionColorsCss + (AppState.sectionAiCss[sectionType] || design.css || '');
+                    if (effects.scrollEffect !== 'none') {
+                        const scrollClass = `scroll-${effects.scrollEffect}`;
+                        const speed = effects.scrollSpeed / 10;
+                        sectionCSS += `
+                            .${scrollClass} {
+                                opacity: 0;
+                                transform: ${effects.scrollEffect === 'slide' ? 'translateY(40px)' : effects.scrollEffect === 'zoom' ? 'scale(0.95)' : 'none'};
+                                animation: ${effects.scrollEffect}In ${0.6 + speed * 0.4}s ease forwards;
+                                animation-delay: calc(var(--scroll-delay, 0) * 0.1s);
+                            }
+                        `;
+                    }
+                    sectionsCSS += sectionCSS;
+
+                    // HTML with content substitution
+                    let sectionHTML = design.html || '';
+                    Object.keys(content).forEach(key => {
+                        const value = content[key];
+                        if (typeof value === 'string') {
+                            sectionHTML = sectionHTML.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), value);
+                        }
+                    });
+
+                    const scrollClass = effects.scrollEffect !== 'none' ? `scroll-${effects.scrollEffect}` : '';
+                    sectionsHTML += `<div class="section-wrapper ${scrollClass}" id="section-${sectionType}" style="--scroll-delay:${AppState.sectionOrder.indexOf(sectionType)}">${sectionHTML}</div>`;
+
+                    // Section JS - previously dropped entirely since raw innerHTML never
+                    // executes <script> tags. Wrapping in an iframe lets this actually run
+                    // (countdown timers, reveal buttons, music toggle, etc.)
+                    if (design.js) {
+                        sectionsJS += `\ntry {\n${design.js}\n} catch (e) { console.error('Section script error (${sectionType}):', e); }\n`;
+                    }
+                });
+
+                const bg = effects.bgStyle === 'image' && effects.bgImage ? `url('${effects.bgImage}') center/cover`
+                    : effects.bgStyle === 'gradient' ? `linear-gradient(135deg, ${effects.bgColor}, ${effects.goldColor}33)`
+                    : effects.bgStyle === 'pattern' ? `repeating-conic-gradient(${effects.bgColor} 0% 25%, ${effects.goldColor}22 0% 50%) 0 0 / 40px 40px`
+                    : effects.bgColor;
+
+                // Build the cover/opening overlay (plays first, sits on top of the sections,
+                // same design object your sections/cover/*.js files export).
+                const cover = AppState.openingDesigns.find(o => o.id === AppState.selectedOpening);
+                let coverHTML = '';
+                let coverCSS = '';
+                let coverJS = '';
+
+                if (cover) {
+                    const heroData = AppState.sectionData.hero?.content || {};
+                    const coverContent = {
+                        names: `${heroData.brideName || 'A'} & ${heroData.groomName || 'V'}`,
+                        brideName: heroData.brideName || 'Aanya',
+                        groomName: heroData.groomName || 'Rohan',
+                        ...AppState.openingContent
+                    };
+
+                    let html = cover.html || '';
+                    Object.keys(coverContent).forEach((key) => {
+                        html = html.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), coverContent[key] ?? '');
+                    });
+
+                    coverHTML = `<div id="cover-overlay-root">${html}</div>`;
+                    const coverColorsCss = cover.colors
+                        ? `#cover-overlay-root { ${Object.keys(cover.colors).map((k) => `${k}: ${cover.colors[k]};`).join(' ')} }`
+                        : '';
+                    coverCSS = `
+                        #cover-overlay-root { position: relative; z-index: 10000; }
+                        ${coverColorsCss}
+                        ${AppState.openingAiCss || cover.css || ''}
+                    `;
+                    if (cover.js) {
+                        coverJS = `\ntry {\n${cover.js}\n} catch (e) { console.error('Cover script error:', e); }\n`;
+                    }
+                }
+
+                return `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8" />
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                        <style>
+                            /* html/body forced to fully fill the device frame (9:16 mobile or
+                               the desktop box) edge-to-edge, regardless of the visitor's
+                               actual screen size - the iframe's own box defines the viewport. */
+                            html, body {
+                                margin: 0; padding: 0; width: 100%; min-height: 100%;
+                                background: ${bg};
+                                font-family: ${effects.font};
+                                color: ${effects.textColor};
+                                font-size: ${effects.fontSize}px;
+                                line-height: ${effects.lineHeight};
+                                ${effects.scrollEffect === 'parallax' ? 'background-attachment: fixed;' : ''}
+                            }
+                            * { box-sizing: border-box; }
+                            img { max-width: 100%; height: auto; }
+                            .page-inner {
+                                max-width: ${effects.contentWidth};
+                                margin: 0 auto;
+                                text-align: ${effects.contentAlign};
+                                padding: ${effects.sectionSpacing}px 16px;
+                            }
+                            .section-wrapper { padding: ${effects.sectionSpacing / 2}px 0; }
+                            @keyframes fadeIn { to { opacity: 1; } }
+                            @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+                            @keyframes zoomIn { to { opacity: 1; transform: scale(1); } }
+                            ${sectionsCSS}
+                            ${coverCSS}
+                        </style>
+                    </head>
+                    <body>
+                        ${coverHTML}
+                        <div class="page-inner">
+                            ${sectionsHTML}
+                        </div>
+                        ${effects.particles ? `<div id="particles-container" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></div>` : ''}
+                        <script>
+                            ${coverJS}
+                            ${sectionsJS}
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+            },
+
+            updatePageEffects() {
+                // Read all effect values from the UI
+                const bgColor = document.getElementById('pageBgColor').value;
+                const bgImage = document.getElementById('pageBgImage').value;
+                const particlesEnabled = document.getElementById('particlesEnabled').checked;
+                const particleCount = parseInt(document.getElementById('particleCount').value) || 80;
+                const particleSize = parseInt(document.getElementById('particleSize').value) || 3;
+                const particleSpeed = parseInt(document.getElementById('particleSpeed').value) || 3;
+                const particleColor = document.getElementById('particleColor').value;
+                const scrollEffect = document.querySelector('input[name="scrollEffect"]:checked')?.value || 'none';
+                const scrollSpeed = parseInt(document.getElementById('scrollSpeed').value) || 5;
+                const primaryColor = document.getElementById('themePrimary').value;
+                const goldColor = document.getElementById('themeGold').value;
+                const textColor = document.getElementById('textColor').value;
+                const font = document.getElementById('themeFont').value;
+                const fontSize = parseInt(document.getElementById('fontSize').value) || 16;
+                const lineHeight = parseFloat(document.getElementById('lineHeight').value) || 1.6;
+                const contentWidth = document.getElementById('contentWidth').value;
+                const contentAlign = document.getElementById('contentAlign').value;
+                const sectionSpacing = parseInt(document.getElementById('sectionSpacing').value) || 40;
+
+                AppState.pageEffects = {
+                    bgColor,
+                    bgImage,
+                    bgStyle: AppState.pageEffects.bgStyle || 'solid',
+                    particles: particlesEnabled,
+                    particleCount,
+                    particleSize,
+                    particleSpeed,
+                    particleColor,
+                    scrollEffect,
+                    scrollSpeed,
+                    primaryColor,
+                    goldColor,
+                    textColor,
+                    font,
+                    fontSize,
+                    lineHeight,
+                    contentWidth,
+                    contentAlign,
+                    sectionSpacing
+                };
+
+                // Update particle config visibility
+                const particleConfig = document.getElementById('particleConfig');
+                if (particlesEnabled) {
+                    particleConfig.style.display = 'grid';
+                } else {
+                    particleConfig.style.display = 'none';
+                }
+
+                // Update range value displays
+                document.getElementById('particleCountVal').textContent = particleCount;
+                document.getElementById('particleSizeVal').textContent = particleSize;
+                document.getElementById('particleSpeedVal').textContent = particleSpeed;
+                document.getElementById('scrollSpeedVal').textContent = scrollSpeed;
+                document.getElementById('fontSizeVal').textContent = fontSize + 'px';
+                document.getElementById('lineHeightVal').textContent = lineHeight;
+                document.getElementById('sectionSpacingVal').textContent = sectionSpacing + 'px';
+
+                // Update root CSS variables for live preview
+                document.documentElement.style.setProperty('--primary-maroon', primaryColor);
+                document.documentElement.style.setProperty('--royal-gold', goldColor);
+                document.documentElement.style.setProperty('--text-dark', textColor);
+
+                // Re-render previews if on step 2 or 4
+                const stepPanel1 = document.querySelector('.step-panel[data-step="1"]');
+                if (stepPanel1 && stepPanel1.classList.contains('active')) {
+                    // Re-render section previews
+                    Object.keys(AppState.sectionDesigns).forEach(sectionType => {
+                        const designs = AppState.sectionDesigns[sectionType] || [];
+                        const design = designs.find(d => d.id === AppState.sectionData[sectionType]?.designId);
+                        if (design) {
+                            this.renderSectionPreview(sectionType, design);
+                        }
+                    });
+                }
+
+                const stepPanel4 = document.querySelector('.step-panel[data-step="4"]');
+                if (stepPanel4 && stepPanel4.classList.contains('active')) {
+                    this.renderStep4();
+                }
+            }
+        };
+
+        // ==========================================
+        // GLOBAL ACTIONS
+        // ==========================================
+        function goToStep(step) {
+            if (step < 0 || step > 5) return;
+
+            document.querySelectorAll('.step-panel').forEach((el, i) => el.classList.toggle('active', i === step));
+            document.querySelectorAll('.step-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'done');
+                if (i === step) dot.classList.add('active');
+                else if (i < step) dot.classList.add('done');
+            });
+            document.querySelectorAll('.step-line').forEach((line, i) => line.classList.toggle('done', i < step));
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (step === 1) UIRenderer.renderStep2();
+            if (step === 2) UIRenderer.renderStep3();
+            if (step === 4) UIRenderer.renderStep4();
+            if (step === 3) UIRenderer.updatePageEffects();
+        }
+
+        function setTheme(theme) {
+            AppState.theme = theme;
+            document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
+            document.querySelector(`.theme-swatch[data-theme="${theme}"]`).classList.add('active');
+
+            const themes = {
+                maroon: { primary: '#7A1C2E', gold: '#D4AF37', bg: '#FAF5E8' },
+                emerald: { primary: '#1a4a3a', gold: '#c9a84c', bg: '#f0fdf4' },
+                dark: { primary: '#1a1a2e', gold: '#c9a84c', bg: '#0f172a' },
+                brown: { primary: '#8B4513', gold: '#D4AF37', bg: '#fdf6e3' }
+            };
+
+            const t = themes[theme];
+            document.documentElement.style.setProperty('--primary-maroon', t.primary);
+            document.documentElement.style.setProperty('--royal-gold', t.gold);
+            document.body.style.background = t.bg;
+
+            document.getElementById('themePrimary').value = t.primary;
+            document.getElementById('themeGold').value = t.gold;
+            document.getElementById('pageBgColor').value = t.bg;
+
+            AppState.pageEffects.primaryColor = t.primary;
+            AppState.pageEffects.goldColor = t.gold;
+            AppState.pageEffects.bgColor = t.bg;
+
+            UIRenderer.updatePageEffects();
+        }
+
+        function setBgStyle(style, btn) {
+            document.querySelectorAll('[data-bgstyle]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            AppState.pageEffects.bgStyle = style;
+            UIRenderer.updatePageEffects();
+        }
+
+        function playOpeningPreview() {
+            UIRenderer.replayPreview('openingPreviewFrame');
+        }
+
+        async function generateOpeningAI() {
+            const promptInput = document.getElementById('openingAIPrompt');
+            const prompt = promptInput ? promptInput.value.trim() : '';
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            const genBtn = promptInput.closest('div').querySelector('.btn-primary');
+            const originalBtnHTML = genBtn ? genBtn.innerHTML : '';
+            if (genBtn) {
+                genBtn.disabled = true;
+                genBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+
+            try {
+                const res = await fetch('/api/ai/generate-section', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sectionType: 'cover', prompt }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error + (data.details ? `: ${data.details.join('; ')}` : ''));
+                }
+
+                // New response format: { updates, result }
+                const result = data.result || data.updates;
+                if (!result || !result.html) {
+                    throw new Error('No design returned from AI');
+                }
+                
+                const design = {
+                    id: `ai-generated-cover-${Date.now()}`,
+                    label: `AI Generated Cover`,
+                    html: result.html,
+                    css: result.css,
+                    js: result.js,
+                    defaults: {}
+                };
+                
+                AppState.openingContent = { ...design.defaults };
+
+                // Preview immediately by temporarily treating it as the selected opening.
+                const tempOpening = { ...design, defaults: design.defaults };
+                AppState.openingDesigns = [tempOpening, ...AppState.openingDesigns.filter(o => o.id !== design.id)];
+                AppState.selectedOpening = design.id;
+                UIRenderer.renderStep3();
+
+                const wantsSave = confirm(`AI generated cover "${design.label}". Save it to your cover design list?`);
+                if (wantsSave) {
+                    const saveRes = await fetch('/api/ai/save-section', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sectionType: 'cover', design, prompt }),
+                    });
+                    const saveData = await saveRes.json();
+                    if (!saveRes.ok) throw new Error(saveData.error || 'Save failed');
+
+                    AppState.openingDesigns = await UIRenderer.db.fetchOpeningDesigns();
+                    AppState.selectedOpening = design.id;
+                    UIRenderer.renderStep3();
+                }
+            } catch (error) {
+                console.error('AI generation failed:', error);
+                alert(`AI generation failed: ${error.message}`);
+            } finally {
+                if (genBtn) {
+                    genBtn.disabled = false;
+                    genBtn.innerHTML = originalBtnHTML;
+                }
+            }
+        }
+
+        async function saveCard() {
+            try {
+                const cardData = {
+                    section_order: AppState.sectionOrder,
+                    sections: AppState.sectionData,
+                    opening_base_id: AppState.selectedOpening,
+                    theme: AppState.theme,
+                    page_effects: AppState.pageEffects,
+                    status: 'draft'
+                };
+
+                const result = await UIRenderer.db.saveCard(cardData);
+                alert(`✅ Card saved to database! ID: ${result.id}, Slug: ${result.slug}`);
+            } catch (error) {
+                console.error('Save failed:', error);
+                alert('Failed to save card. Please try again.');
+            }
+        }
+
+        function copyLink() {
+            const slug = AppState.cardId || 'new-card';
+            navigator.clipboard.writeText(`https://yourdomain.com/card/${slug}`);
+            alert('✅ Link copied!');
+        }
+
+        function shareCard(platform) {
+            const slug = AppState.cardId || 'new-card';
+            const url = `https://yourdomain.com/card/${slug}`;
+            const text = '💕 Check out our wedding invitation!';
+
+            if (platform === 'whatsapp') {
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+            } else if (platform === 'email') {
+                window.open(`mailto:?subject=Wedding Invitation&body=${encodeURIComponent(text + '\n\n' + url)}`, '_blank');
+            } else {
+                alert(`Sharing to ${platform} simulated!`);
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await UIRenderer.init();
+                // Hide loading screen after successful initialization
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                // Hide loading screen even on error so user can see the error
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+                }
+                alert('Failed to load AI Card Designer. Please refresh the page.');
+            }
+        });
+
+        // Range slider live updates
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('range-slider')) {
+                const valSpan = document.getElementById(e.target.id + 'Val');
+                if (valSpan) {
+                    valSpan.textContent = e.target.value + (e.target.id === 'fontSize' ? 'px' : e.target.id === 'sectionSpacing' ? 'px' : '');
+                }
+                if (e.target.id === 'particleCount' || e.target.id === 'particleSize' || e.target.id === 'particleSpeed' || 
+                    e.target.id === 'scrollSpeed' || e.target.id === 'fontSize' || e.target.id === 'lineHeight' || e.target.id === 'sectionSpacing') {
+                    UIRenderer.updatePageEffects();
+                }
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'particlesEnabled' || e.target.id === 'contentWidth' || e.target.id === 'contentAlign') {
+                UIRenderer.updatePageEffects();
+            }
+        });
+    </script>
+</body>
+</html>
