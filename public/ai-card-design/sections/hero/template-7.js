@@ -1,10 +1,10 @@
 /**
  * Ocean Teal Template for HERO section
  * Template 7 of 10
- * 
+ *
  * CSS Variables use descriptive names for easy AI editing:
  * - --bg-page: main page background
- * - --bg-card: card/container background  
+ * - --bg-card: card/container background
  * - --accent-gold: primary accent/decorative color
  * - --accent-gold-light: lighter accent variant
  * - --c-ivory: primary text color
@@ -12,20 +12,20 @@
  */
 
 module.exports = {
-  id: 'hero-template-7',
-  name: 'Ocean Teal',
-  section: 'hero',
+  id: "hero-template-7",
+  name: "Ocean Teal",
+  section: "hero",
   themeIndex: 7,
-  
+
   colors: {
-    '--bg-page': '#0a1a1f',
-    '--bg-card': '#1a2f3a',
-    '--accent-gold': '#68b8c8',
-    '--accent-gold-light': '#88d8e8',
-    '--c-ivory': '#e0f0f8',
-    '--text-muted': '#6a8a9a'
+    "--bg-page": "#0a1a1f",
+    "--bg-card": "#1a2f3a",
+    "--accent-gold": "#68b8c8",
+    "--accent-gold-light": "#88d8e8",
+    "--c-ivory": "#e0f0f8",
+    "--text-muted": "#6a8a9a"
   },
-  
+
   fields: [
     {
         "key": "brideFamily",
@@ -69,36 +69,108 @@ module.exports = {
         "label": "Couple Hashtag",
         "required": false
     }
-],
-  
+  ],
+
   defaults: {
-  "brideFamily": "The Sharma Family",
-  "groomFamily": "The Verma Family",
-  "brideName": "Vanya",
-  "groomName": "Atharv",
-  "date": "23rd November 2026 at 6:00 PM",
-  "venue": "The Grand Palace, Delhi",
-  "hashtag": "#VanyaWedsAtharv"
-},
-  
-  // Layout hints for this theme
+    "brideFamily": "The Sharma Family",
+    "groomFamily": "The Verma Family",
+    "brideName": "Vanya",
+    "groomName": "Atharv",
+    "date": "23rd November 2026 at 6:00 PM",
+    "venue": "The Grand Palace, Delhi",
+    "hashtag": "#VanyaWedsAtharv"
+  },
+
+  html: `
+<section class="hero-section">
+  <div class="hero-inner">
+    <div class="hero-top-line reveal"></div>
+    <p class="hero-families reveal">{{brideFamily}} &amp; {{groomFamily}}</p>
+    <p class="hero-invite reveal">joyfully invite you to the wedding of</p>
+    <h1 class="hero-names reveal">{{brideName}} <span class="hero-amp">&amp;</span> {{groomName}}</h1>
+    <div class="hero-divider reveal"><span class="hero-diamond"></span></div>
+    <p class="hero-date reveal">{{date}}</p>
+    <p class="hero-venue reveal">{{venue}}</p>
+    <p class="hero-hashtag reveal">{{hashtag}}</p>
+  </div>
+</section>`,
+
+  css: `
+.hero-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+  color: var(--c-ivory);
+  text-align: center;
+  padding: 4rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero-inner { max-width: 640px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-top-line { width: 60px; height: 2px; background: var(--accent-gold); margin: 0 auto 1.5rem; }
+.hero-families {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent-gold-light);
+  margin-bottom: 0.75rem;
+}
+.hero-invite {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+.hero-names {
+  font-family: 'Cinzel', serif;
+  font-size: 3.2rem;
+  line-height: 1.25;
+  color: var(--accent-gold);
+  margin: 0.5rem 0;
+  text-shadow: 0 0 30px rgba(0,0,0,0.25);
+}
+.hero-amp { color: var(--c-ivory); font-size: 2.4rem; padding: 0 0.3rem; }
+.hero-divider { margin: 1.75rem auto; width: 160px; height: 1px; background: linear-gradient(to right, transparent, var(--accent-gold), transparent); position: relative; }
+.hero-diamond { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; background: var(--accent-gold); transform: translate(-50%, -50%) rotate(45deg); }
+.hero-date { font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; color: var(--c-ivory); letter-spacing: 1px; margin-bottom: 0.4rem; }
+.hero-venue { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+.hero-hashtag {
+  display: inline-block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold);
+  border-radius: 999px;
+  padding: 0.4rem 1.1rem;
+  letter-spacing: 0.5px;
+}
+@media (max-width: 640px) {
+  .hero-names { font-size: 2.1rem; }
+  .hero-date { font-size: 1.1rem; }
+}`,
+
+  js: `
+(function(){
+  var root = document.querySelector('.hero-section');
+  if (!root) return;
+  var els = root.querySelectorAll('.reveal');
+  els.forEach(function(el, i){
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    setTimeout(function(){
+      el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 120 * i);
+  });
+})();`,
+
   layout: {
-    style: 'gradient',
-    decorativeElements: ["watercolor-splash","rounded-corners"]
+    "style": "gradient",
+    "decorativeElements": ["watercolor-splash","rounded-corners"]
   }
 };
-
-/**
- * CSS Variable Reference for AI Editing:
- * * --bg-page: main page background color
- * * --bg-card: card or container background color
- * * --accent-gold: primary accent and decorative element color
- * * --accent-gold-light: lighter variant of accent color for highlights
- * * --c-ivory: primary text and heading color
- * * --text-muted: secondary, caption, and muted text color
- * 
- * IMPORTANT: When modifying colors, ONLY change the specific variable mentioned.
- * - To change background: modify --bg-page or --bg-card ONLY
- * - To change text color: modify --c-ivory or --text-muted ONLY  
- * - To change accents: modify --accent-gold or --accent-gold-light ONLY
- */

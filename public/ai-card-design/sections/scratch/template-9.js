@@ -1,10 +1,10 @@
 /**
  * Slate Silver Template for SCRATCH section
  * Template 9 of 10
- * 
+ *
  * CSS Variables use descriptive names for easy AI editing:
  * - --bg-page: main page background
- * - --bg-card: card/container background  
+ * - --bg-card: card/container background
  * - --accent-gold: primary accent/decorative color
  * - --accent-gold-light: lighter accent variant
  * - --c-ivory: primary text color
@@ -12,20 +12,20 @@
  */
 
 module.exports = {
-  id: 'scratch-template-9',
-  name: 'Slate Silver',
-  section: 'scratch',
+  id: "scratch-template-9",
+  name: "Slate Silver",
+  section: "scratch",
   themeIndex: 9,
-  
+
   colors: {
-    '--bg-page': '#0f1218',
-    '--bg-card': '#1a1f2a',
-    '--accent-gold': '#a8b0b8',
-    '--accent-gold-light': '#c8d0d8',
-    '--c-ivory': '#e8eef8',
-    '--text-muted': '#7a808a'
+    "--bg-page": "#0f1218",
+    "--bg-card": "#1a1f2a",
+    "--accent-gold": "#a8b0b8",
+    "--accent-gold-light": "#c8d0d8",
+    "--c-ivory": "#e8eef8",
+    "--text-muted": "#7a808a"
   },
-  
+
   fields: [
     {
         "key": "title",
@@ -45,32 +45,104 @@ module.exports = {
         "label": "Scratch Instruction",
         "required": false
     }
-],
-  
+  ],
+
   defaults: {
-  "title": "A Special Surprise",
-  "hiddenMessage": "You are invited to our Sangeet!",
-  "instruction": "Scratch to reveal!"
-},
-  
-  // Layout hints for this theme
+    "title": "A Special Surprise",
+    "hiddenMessage": "You are invited to our Sangeet!",
+    "instruction": "Scratch to reveal!"
+  },
+
+  html: `
+<section class="scratch-section">
+  <div class="scratch-inner">
+    <h2 class="scratch-title reveal">{{title}}</h2>
+    <p class="scratch-instruction reveal">{{instruction}}</p>
+    <div class="scratch-card reveal">
+      <div class="scratch-message">{{hiddenMessage}}</div>
+      <canvas class="scratch-canvas" width="320" height="180"></canvas>
+    </div>
+  </div>
+</section>`,
+
+  css: `
+.scratch-section { padding: 5rem 1.5rem; background: var(--bg-page); text-align: center; }
+.scratch-inner { max-width: 420px; margin: 0 auto; }
+.scratch-title { font-family: 'Cinzel', serif; font-size: 2.2rem; color: var(--accent-gold); margin-bottom: 0.5rem; }
+.scratch-instruction { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; color: var(--text-muted); margin-bottom: 2rem; }
+.scratch-card { position: relative; width: 320px; max-width: 100%; height: 180px; margin: 0 auto; border-radius: 12px; overflow: hidden; border: 1px solid rgba(201,168,76,0.3); }
+.scratch-message {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 1rem; font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--accent-gold);
+  background: var(--bg-card);
+}
+.scratch-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; touch-action: none; }`,
+
+  js: `
+
+(function(){
+  var root = document.querySelector('.scratch-section');
+  if (!root) return;
+  var els = root.querySelectorAll('.reveal');
+  els.forEach(function(el, i){
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    setTimeout(function(){
+      el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 120 * i);
+  });
+})();
+(function(){
+  var canvas = document.querySelector('.scratch-canvas');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+
+  function paintOverlay() {
+    var grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#cfcfcf');
+    grad.addColorStop(0.5, '#efefef');
+    grad.addColorStop(1, '#b8b8b8');
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = '600 16px sans-serif';
+    ctx.fillStyle = '#8a8a8a';
+    ctx.textAlign = 'center';
+    ctx.fillText('Scratch here', w / 2, h / 2);
+  }
+  paintOverlay();
+
+  var scratching = false;
+  function pos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    var cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return { x: cx * (w / rect.width), y: cy * (h / rect.height) };
+  }
+  function scratchAt(p) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function start(e) { scratching = true; scratchAt(pos(e)); }
+  function move(e) { if (scratching) { e.preventDefault(); scratchAt(pos(e)); } }
+  function end() { scratching = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: true });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+})();`,
+
   layout: {
-    style: 'full-bleed',
-    decorativeElements: ["modern-lines","dot-pattern"]
+    "style": "full-bleed",
+    "decorativeElements": ["modern-lines","dot-pattern"]
   }
 };
-
-/**
- * CSS Variable Reference for AI Editing:
- * * --bg-page: main page background color
- * * --bg-card: card or container background color
- * * --accent-gold: primary accent and decorative element color
- * * --accent-gold-light: lighter variant of accent color for highlights
- * * --c-ivory: primary text and heading color
- * * --text-muted: secondary, caption, and muted text color
- * 
- * IMPORTANT: When modifying colors, ONLY change the specific variable mentioned.
- * - To change background: modify --bg-page or --bg-card ONLY
- * - To change text color: modify --c-ivory or --text-muted ONLY  
- * - To change accents: modify --accent-gold or --accent-gold-light ONLY
- */
