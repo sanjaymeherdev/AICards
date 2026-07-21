@@ -1,12 +1,52 @@
-// Section: Hero (full — with families, date, venue, hashtag)
-// { id, label, html, css, js, fields, defaults }
+/**
+ * Sanjay Template for HERO section
+ * 
+ * CSS Variables use descriptive names for easy AI editing:
+ * - --bg-page: main page background
+ * - --bg-card: card/container background  
+ * - --accent-gold: primary accent/decorative color
+ * - --accent-gold-light: lighter accent variant
+ * - --c-ivory: primary text color
+ * - --text-muted: secondary/muted text color
+ */
 
 module.exports = {
   id: 'sanjay',
-  label: 'Hero — Families & Hashtag',
+  name: 'Sanjay',
+  section: 'hero',
+  themeIndex: 1,
+  
+  colors: {
+    '--bg-page': '#1a0505',
+    '--bg-card': '#2b0a0a',
+    '--accent-gold': '#c9a84c',
+    '--accent-gold-light': '#e8c97a',
+    '--c-ivory': '#f5e6c7',
+    '--text-muted': '#a08575'
+  },
+  
+  fields: [
+    { key: 'brideFamily', type: 'text', label: "Bride's Family", required: true },
+    { key: 'groomFamily', type: 'text', label: "Groom's Family", required: true },
+    { key: 'brideName', type: 'text', label: 'Bride Name', required: true },
+    { key: 'groomName', type: 'text', label: 'Groom Name', required: true },
+    { key: 'date', type: 'text', label: 'Wedding Date & Time', required: true },
+    { key: 'venue', type: 'text', label: 'Venue', required: true },
+    { key: 'hashtag', type: 'text', label: 'Couple Hashtag', required: false }
+  ],
+  
+  defaults: {
+    brideFamily: 'The Sharma Family',
+    groomFamily: 'The Verma Family',
+    brideName: 'Vanya',
+    groomName: 'Atharv',
+    date: '23rd November 2026 &middot; 6:00 PM',
+    venue: 'The Grand Palace, Delhi',
+    hashtag: '#VanyaWedsAtharv'
+  },
 
   html: `
-    <section class="hero">
+<section class="hero">
       <div class="hero-families">{{brideFamily}} &middot; {{groomFamily}}</div>
       <h1 class="hero-names">
         <span>{{brideName}}</span>
@@ -17,11 +57,10 @@ module.exports = {
       <div class="hero-venue-mini">{{venue}}</div>
       <div class="hero-hashtag">{{hashtag}}</div>
       <div class="scroll-hint">Scroll to explore</div>
-    </section>
-  `,
+    </section>`,
 
   css: `
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&display=swap');
     :root{--bg-dark:#1a0505;--c-primary:#5c0f0f;--c-gold:#c9a84c;--c-gold-light:#e8c97a;--c-primary-light:#7a1c1c;--c-ivory:#f5e6c7;--text-muted:#a08575;--font-display:'Cinzel',serif;--font-body:'Cormorant Garamond',serif;--font-sans:'Raleway',sans-serif;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg-dark);min-height:100%;}
@@ -34,28 +73,28 @@ module.exports = {
     .hero-hashtag{font-family:var(--font-sans);font-size:0.8rem;letter-spacing:0.2em;color:var(--c-primary-light);border:1px solid var(--c-primary-light);padding:6px 20px;border-radius:40px;display:inline-block;}
     .scroll-hint{margin-top:60px;font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text-muted);display:flex;flex-direction:column;align-items:center;gap:10px;animation:float 3s ease-in-out infinite;}
     .scroll-hint::after{content:'';width:1px;height:40px;background:linear-gradient(to bottom,var(--c-gold),transparent);}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-  `,
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}`,
 
   js: null,
-
-  fields: [
-    { key: 'brideFamily', type: 'text', label: "Bride's Family", required: true },
-    { key: 'groomFamily', type: 'text', label: "Groom's Family", required: true },
-    { key: 'brideName', type: 'text', label: 'Bride Name', required: true },
-    { key: 'groomName', type: 'text', label: 'Groom Name', required: true },
-    { key: 'date', type: 'text', label: 'Wedding Date & Time', required: true },
-    { key: 'venue', type: 'text', label: 'Venue', required: true },
-    { key: 'hashtag', type: 'text', label: 'Couple Hashtag', required: false }
-  ],
-
-  defaults: {
-    brideFamily: 'The Sharma Family',
-    groomFamily: 'The Verma Family',
-    brideName: 'Vanya',
-    groomName: 'Atharv',
-    date: '23rd November 2026 &middot; 6:00 PM',
-    venue: 'The Grand Palace, Delhi',
-    hashtag: '#VanyaWedsAtharv'
+  
+    
+  layout: {
+    style: 'centered',
+    decorativeElements: ["floral-corners","gold-border"]
   }
 };
+
+/**
+ * CSS Variable Reference for AI Editing:
+ * * --bg-page: main page background color
+ * * --bg-card: card or container background color
+ * * --accent-gold: primary accent and decorative element color
+ * * --accent-gold-light: lighter variant of accent color for highlights
+ * * --c-ivory: primary text and heading color
+ * * --text-muted: secondary, caption, and muted text color
+ * 
+ * IMPORTANT: When modifying colors, ONLY change the specific variable mentioned.
+ * - To change background: modify --bg-page or --bg-card ONLY
+ * - To change text color: modify --c-ivory or --text-muted ONLY  
+ * - To change accents: modify --accent-gold or --accent-gold-light ONLY
+ */
