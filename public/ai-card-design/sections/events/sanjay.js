@@ -1,12 +1,60 @@
-// Section: Events (celebrations grid — up to 3 events)
-// { id, label, html, css, js, fields, defaults }
+/**
+ * Sanjay Template for EVENTS section
+ * 
+ * CSS Variables use descriptive names for easy AI editing:
+ * - --bg-page: main page background
+ * - --bg-card: card/container background  
+ * - --accent-gold: primary accent/decorative color
+ * - --accent-gold-light: lighter accent variant
+ * - --c-ivory: primary text color
+ * - --text-muted: secondary/muted text color
+ */
 
 module.exports = {
   id: 'sanjay',
-  label: 'Events / Celebrations Grid',
+  name: 'Sanjay',
+  section: 'events',
+  themeIndex: 1,
+  
+  colors: {
+    '--bg-page': '#1a0505',
+    '--bg-card': '#2b0a0a',
+    '--accent-gold': '#c9a84c',
+    '--accent-gold-light': '#e8c97a',
+    '--c-ivory': '#f5e6c7',
+    '--text-muted': '#a08575'
+  },
+  
+  fields: [
+    { key: 'title', type: 'text', label: 'Section Title', required: true },
+    { key: 'subtitle', type: 'text', label: 'Subtitle', required: false },
+    { key: 'event1Icon', type: 'text', label: 'Event 1 Icon (emoji)', required: false },
+    { key: 'event1Name', type: 'text', label: 'Event 1 Name', required: true },
+    { key: 'event1Date', type: 'text', label: 'Event 1 Date', required: true },
+    { key: 'event1Time', type: 'text', label: 'Event 1 Time', required: false },
+    { key: 'event1Venue', type: 'text', label: 'Event 1 Venue', required: false },
+    { key: 'event2Icon', type: 'text', label: 'Event 2 Icon (emoji)', required: false },
+    { key: 'event2Name', type: 'text', label: 'Event 2 Name', required: true },
+    { key: 'event2Date', type: 'text', label: 'Event 2 Date', required: true },
+    { key: 'event2Time', type: 'text', label: 'Event 2 Time', required: false },
+    { key: 'event2Venue', type: 'text', label: 'Event 2 Venue', required: false },
+    { key: 'event3Icon', type: 'text', label: 'Event 3 Icon (emoji)', required: false },
+    { key: 'event3Name', type: 'text', label: 'Event 3 Name', required: true },
+    { key: 'event3Date', type: 'text', label: 'Event 3 Date', required: true },
+    { key: 'event3Time', type: 'text', label: 'Event 3 Time', required: false },
+    { key: 'event3Venue', type: 'text', label: 'Event 3 Venue', required: false }
+  ],
+  
+  defaults: {
+    title: 'Celebrations',
+    subtitle: 'Join us across all the festivities',
+    event1Icon: '\\u{1F33F}', event1Name: 'Mehendi', event1Date: '21 Nov 2026', event1Time: '4:00 PM', event1Venue: 'Sharma Residence',
+    event2Icon: '\\u{1F483}', event2Name: 'Sangeet', event2Date: '22 Nov 2026', event2Time: '7:00 PM', event2Venue: 'The Grand Palace, Lawn',
+    event3Icon: '\\u{1F48D}', event3Name: 'Wedding', event3Date: '23 Nov 2026', event3Time: '6:00 PM', event3Venue: 'The Grand Palace, Delhi'
+  },
 
   html: `
-    <section class="events-section">
+<section class="events-section">
       <div class="section-inner">
         <h2 class="section-title">{{title}}</h2>
         <p class="section-subtitle">{{subtitle}}</p>
@@ -34,11 +82,10 @@ module.exports = {
           </div>
         </div>
       </div>
-    </section>
-  `,
+    </section>`,
 
   css: `
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&family=Cormorant+Garamond:ital,wght@1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&family=Cormorant+Garamond:ital,wght@1,400&display=swap');
     :root{--bg-dark:#1a0505;--bg-mid:#2b0a0a;--c-primary:#5c0f0f;--c-gold:#c9a84c;--c-gold-light:#e8c97a;--c-ivory:#f5e6c7;--text-muted:#a08575;--font-display:'Cinzel',serif;--font-body:'Cormorant Garamond',serif;--font-sans:'Raleway',sans-serif;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg-dark);min-height:100%;color:var(--c-ivory);}
@@ -53,36 +100,28 @@ module.exports = {
     .event-name{font-family:var(--font-display);font-size:1.05rem;color:var(--c-gold-light);letter-spacing:0.06em;margin-bottom:10px;}
     .event-date{font-size:0.9rem;color:var(--c-ivory);}
     .event-time{font-size:0.85rem;color:var(--text-muted);margin-bottom:4px;}
-    .event-venue{font-size:0.85rem;color:var(--text-muted);font-style:italic;}
-  `,
+    .event-venue{font-size:0.85rem;color:var(--text-muted);font-style:italic;}`,
 
   js: null,
-
-  fields: [
-    { key: 'title', type: 'text', label: 'Section Title', required: true },
-    { key: 'subtitle', type: 'text', label: 'Subtitle', required: false },
-    { key: 'event1Icon', type: 'text', label: 'Event 1 Icon (emoji)', required: false },
-    { key: 'event1Name', type: 'text', label: 'Event 1 Name', required: true },
-    { key: 'event1Date', type: 'text', label: 'Event 1 Date', required: true },
-    { key: 'event1Time', type: 'text', label: 'Event 1 Time', required: false },
-    { key: 'event1Venue', type: 'text', label: 'Event 1 Venue', required: false },
-    { key: 'event2Icon', type: 'text', label: 'Event 2 Icon (emoji)', required: false },
-    { key: 'event2Name', type: 'text', label: 'Event 2 Name', required: true },
-    { key: 'event2Date', type: 'text', label: 'Event 2 Date', required: true },
-    { key: 'event2Time', type: 'text', label: 'Event 2 Time', required: false },
-    { key: 'event2Venue', type: 'text', label: 'Event 2 Venue', required: false },
-    { key: 'event3Icon', type: 'text', label: 'Event 3 Icon (emoji)', required: false },
-    { key: 'event3Name', type: 'text', label: 'Event 3 Name', required: true },
-    { key: 'event3Date', type: 'text', label: 'Event 3 Date', required: true },
-    { key: 'event3Time', type: 'text', label: 'Event 3 Time', required: false },
-    { key: 'event3Venue', type: 'text', label: 'Event 3 Venue', required: false }
-  ],
-
-  defaults: {
-    title: 'Celebrations',
-    subtitle: 'Join us across all the festivities',
-    event1Icon: '\\u{1F33F}', event1Name: 'Mehendi', event1Date: '21 Nov 2026', event1Time: '4:00 PM', event1Venue: 'Sharma Residence',
-    event2Icon: '\\u{1F483}', event2Name: 'Sangeet', event2Date: '22 Nov 2026', event2Time: '7:00 PM', event2Venue: 'The Grand Palace, Lawn',
-    event3Icon: '\\u{1F48D}', event3Name: 'Wedding', event3Date: '23 Nov 2026', event3Time: '6:00 PM', event3Venue: 'The Grand Palace, Delhi'
+  
+    
+  layout: {
+    style: 'centered',
+    decorativeElements: ["floral-corners","gold-border"]
   }
 };
+
+/**
+ * CSS Variable Reference for AI Editing:
+ * * --bg-page: main page background color
+ * * --bg-card: card or container background color
+ * * --accent-gold: primary accent and decorative element color
+ * * --accent-gold-light: lighter variant of accent color for highlights
+ * * --c-ivory: primary text and heading color
+ * * --text-muted: secondary, caption, and muted text color
+ * 
+ * IMPORTANT: When modifying colors, ONLY change the specific variable mentioned.
+ * - To change background: modify --bg-page or --bg-card ONLY
+ * - To change text color: modify --c-ivory or --text-muted ONLY  
+ * - To change accents: modify --accent-gold or --accent-gold-light ONLY
+ */

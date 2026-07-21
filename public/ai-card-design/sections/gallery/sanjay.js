@@ -1,12 +1,48 @@
-// Section: Gallery / Slideshow (up to 3 photos)
-// { id, label, html, css, js, fields, defaults }
+/**
+ * Sanjay Template for GALLERY section
+ * 
+ * CSS Variables use descriptive names for easy AI editing:
+ * - --bg-page: main page background
+ * - --bg-card: card/container background  
+ * - --accent-gold: primary accent/decorative color
+ * - --accent-gold-light: lighter accent variant
+ * - --c-ivory: primary text color
+ * - --text-muted: secondary/muted text color
+ */
 
 module.exports = {
   id: 'sanjay',
-  label: 'Gallery Slideshow',
+  name: 'Sanjay',
+  section: 'gallery',
+  themeIndex: 1,
+  
+  colors: {
+    '--bg-page': '#1a0505',
+    '--bg-card': '#2b0a0a',
+    '--accent-gold': '#c9a84c',
+    '--accent-gold-light': '#e8c97a',
+    '--c-ivory': '#f5e6c7',
+    '--text-muted': '#a08575'
+  },
+  
+  fields: [
+    { key: 'title', type: 'text', label: 'Section Title', required: true },
+    { key: 'subtitle', type: 'text', label: 'Subtitle', required: false },
+    { key: 'photo1Url', type: 'text', label: 'Photo 1 URL', required: false },
+    { key: 'photo2Url', type: 'text', label: 'Photo 2 URL', required: false },
+    { key: 'photo3Url', type: 'text', label: 'Photo 3 URL', required: false }
+  ],
+  
+  defaults: {
+    title: 'Our Story',
+    subtitle: 'A glimpse of us',
+    photo1Url: '',
+    photo2Url: '',
+    photo3Url: ''
+  },
 
   html: `
-    <section class="gallery-section">
+<section class="gallery-section">
       <div class="section-inner center">
         <h2 class="section-title">{{title}}</h2>
         <p class="section-subtitle">{{subtitle}}</p>
@@ -21,11 +57,10 @@ module.exports = {
           <div class="slide-dots" id="slide-dots"></div>
         </div>
       </div>
-    </section>
-  `,
+    </section>`,
 
   css: `
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@1,400&display=swap');
     :root{--bg-dark:#1a0505;--c-gold:#c9a84c;--c-ivory:#f5e6c7;--text-muted:#a08575;--font-display:'Cinzel',serif;--font-body:'Cormorant Garamond',serif;--shadow-deep:0 20px 60px rgba(0,0,0,0.5);}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg-dark);min-height:100%;color:var(--c-ivory);}
@@ -41,11 +76,10 @@ module.exports = {
     .slide-btn.prev{left:14px;} .slide-btn.next{right:14px;}
     .slide-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:2;}
     .slide-dot{width:7px;height:7px;border-radius:50%;background:rgba(201,168,76,0.3);cursor:pointer;transition:background 0.3s,transform 0.3s;}
-    .slide-dot.active{background:var(--c-gold);transform:scale(1.3);}
-  `,
+    .slide-dot.active{background:var(--c-gold);transform:scale(1.3);}`,
 
   js: `
-    (function(){
+(function(){
       var track=document.getElementById('slideshow-track');
       var dotsWrap=document.getElementById('slide-dots');
       var count=track.querySelectorAll('.slide-img').length;
@@ -65,22 +99,26 @@ module.exports = {
       document.getElementById('slide-prev').onclick=function(){ go(cur-1); };
       document.getElementById('slide-next').onclick=function(){ go(cur+1); };
       setInterval(function(){ go(cur+1); }, 4000);
-    })();
-  `,
-
-  fields: [
-    { key: 'title', type: 'text', label: 'Section Title', required: true },
-    { key: 'subtitle', type: 'text', label: 'Subtitle', required: false },
-    { key: 'photo1Url', type: 'text', label: 'Photo 1 URL', required: false },
-    { key: 'photo2Url', type: 'text', label: 'Photo 2 URL', required: false },
-    { key: 'photo3Url', type: 'text', label: 'Photo 3 URL', required: false }
-  ],
-
-  defaults: {
-    title: 'Our Story',
-    subtitle: 'A glimpse of us',
-    photo1Url: '',
-    photo2Url: '',
-    photo3Url: ''
+    })();`,
+  
+    
+  layout: {
+    style: 'centered',
+    decorativeElements: ["floral-corners","gold-border"]
   }
 };
+
+/**
+ * CSS Variable Reference for AI Editing:
+ * * --bg-page: main page background color
+ * * --bg-card: card or container background color
+ * * --accent-gold: primary accent and decorative element color
+ * * --accent-gold-light: lighter variant of accent color for highlights
+ * * --c-ivory: primary text and heading color
+ * * --text-muted: secondary, caption, and muted text color
+ * 
+ * IMPORTANT: When modifying colors, ONLY change the specific variable mentioned.
+ * - To change background: modify --bg-page or --bg-card ONLY
+ * - To change text color: modify --c-ivory or --text-muted ONLY  
+ * - To change accents: modify --accent-gold or --accent-gold-light ONLY
+ */

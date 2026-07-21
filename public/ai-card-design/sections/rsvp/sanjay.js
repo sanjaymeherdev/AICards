@@ -1,12 +1,42 @@
-// Section: RSVP (form -> WhatsApp)
-// { id, label, html, css, js, fields, defaults }
+/**
+ * Sanjay Template for RSVP section
+ * 
+ * CSS Variables use descriptive names for easy AI editing:
+ * - --bg-page: main page background
+ * - --bg-card: card/container background  
+ * - --accent-gold: primary accent/decorative color
+ * - --accent-gold-light: lighter accent variant
+ * - --c-ivory: primary text color
+ * - --text-muted: secondary/muted text color
+ */
 
 module.exports = {
   id: 'sanjay',
-  label: 'RSVP Form',
+  name: 'Sanjay',
+  section: 'rsvp',
+  themeIndex: 1,
+  
+  colors: {
+    '--bg-page': '#1a0505',
+    '--bg-card': '#2b0a0a',
+    '--accent-gold': '#c9a84c',
+    '--accent-gold-light': '#e8c97a',
+    '--c-ivory': '#f5e6c7',
+    '--text-muted': '#a08575'
+  },
+  
+  fields: [
+    { key: 'rsvpDeadline', type: 'text', label: 'RSVP Deadline', required: true },
+    { key: 'whatsappNumber', type: 'text', label: 'WhatsApp Number (for RSVP)', required: false }
+  ],
+  
+  defaults: {
+    rsvpDeadline: '1st November 2026',
+    whatsappNumber: '919999999999'
+  },
 
   html: `
-    <section class="rsvp-section">
+<section class="rsvp-section">
       <div class="section-inner center">
         <h2 class="section-title">RSVP</h2>
         <p class="section-subtitle">Kindly respond by {{rsvpDeadline}}</p>
@@ -44,11 +74,10 @@ module.exports = {
           </div>
         </div>
       </div>
-    </section>
-  `,
+    </section>`,
 
   css: `
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap');
     :root{--bg-dark:#1a0505;--bg-mid:#2b0a0a;--c-primary:#5c0f0f;--c-primary-light:#7a1c1c;--c-gold:#c9a84c;--c-gold-light:#e8c97a;--c-ivory:#f5e6c7;--text-muted:#a08575;--font-display:'Cinzel',serif;--font-body:'Cormorant Garamond',serif;--font-sans:'Raleway',sans-serif;--glow:0 0 30px rgba(201,168,76,0.3);}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg-dark);min-height:100%;color:var(--c-ivory);}
@@ -65,11 +94,10 @@ module.exports = {
     .btn-rsvp:hover{background:linear-gradient(135deg,var(--c-primary-light),var(--c-primary));box-shadow:var(--glow);}
     .rsvp-success{text-align:center;display:none;flex-direction:column;align-items:center;gap:12px;}
     .rsvp-success .checkmark{font-size:3rem;}
-    .rsvp-success p{font-style:italic;color:var(--c-gold-light);font-size:1.1rem;}
-  `,
+    .rsvp-success p{font-style:italic;color:var(--c-gold-light);font-size:1.1rem;}`,
 
   js: `
-    (function(){
+(function(){
       var card=document.querySelector('.rsvp-card');
       var waNumber=card.getAttribute('data-whatsapp');
       document.getElementById('rsvp-submit-btn').addEventListener('click', function(){
@@ -86,16 +114,26 @@ module.exports = {
         document.getElementById('rsvp-form-wrap').style.display='none';
         document.getElementById('rsvp-success').style.display='flex';
       });
-    })();
-  `,
-
-  fields: [
-    { key: 'rsvpDeadline', type: 'text', label: 'RSVP Deadline', required: true },
-    { key: 'whatsappNumber', type: 'text', label: 'WhatsApp Number (for RSVP)', required: false }
-  ],
-
-  defaults: {
-    rsvpDeadline: '1st November 2026',
-    whatsappNumber: '919999999999'
+    })();`,
+  
+    
+  layout: {
+    style: 'centered',
+    decorativeElements: ["floral-corners","gold-border"]
   }
 };
+
+/**
+ * CSS Variable Reference for AI Editing:
+ * * --bg-page: main page background color
+ * * --bg-card: card or container background color
+ * * --accent-gold: primary accent and decorative element color
+ * * --accent-gold-light: lighter variant of accent color for highlights
+ * * --c-ivory: primary text and heading color
+ * * --text-muted: secondary, caption, and muted text color
+ * 
+ * IMPORTANT: When modifying colors, ONLY change the specific variable mentioned.
+ * - To change background: modify --bg-page or --bg-card ONLY
+ * - To change text color: modify --c-ivory or --text-muted ONLY  
+ * - To change accents: modify --accent-gold or --accent-gold-light ONLY
+ */
