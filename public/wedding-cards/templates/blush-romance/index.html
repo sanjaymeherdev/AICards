@@ -368,6 +368,166 @@
 })();
 
 // ─────────────────────────────────────────────────────────
+// Listen for editor updates via postMessage
+// ─────────────────────────────────────────────────────────
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'UPDATE_WEDDING') {
+    const data = e.data;
+    const wedding = data.wedding || {};
+    const theme = data.theme || {};
+    const colors = theme.colors || {};
+    
+    // Update CSS variables for theme
+    const r = document.documentElement;
+    if (colors.bgDark) r.style.setProperty('--bg-dark', colors.bgDark);
+    if (colors.bgMid) r.style.setProperty('--bg-mid', colors.bgMid);
+    if (colors.primary) r.style.setProperty('--c-primary', colors.primary);
+    if (colors.gold) r.style.setProperty('--c-gold', colors.gold);
+    if (colors.ivory) r.style.setProperty('--c-ivory', colors.ivory);
+    if (colors.particle) r.style.setProperty('--particle-color', colors.particle);
+    
+    // Update door overlay
+    const bi = (wedding.bride || '').trim().split(' ')[0][0];
+    const gi = (wedding.groom || '').trim().split(' ')[0][0];
+    const doorInitials = document.getElementById('door-initials');
+    if (doorInitials && bi && gi) {
+      doorInitials.innerHTML = `${bi} <span class="amp">&</span> ${gi}`;
+    }
+    if (wedding.weddingDateDisplay) {
+      const doorDate = document.getElementById('door-date');
+      if (doorDate) doorDate.textContent = wedding.weddingDateDisplay;
+    }
+    
+    // Update hero section
+    if (wedding.brideFamily && wedding.groomFamily) {
+      const heroFamilies = document.getElementById('hero-families');
+      if (heroFamilies) heroFamilies.textContent = `${wedding.brideFamily}  ·  ${wedding.groomFamily}`;
+    }
+    if (wedding.bride) {
+      const brideName = document.getElementById('bride-name');
+      if (brideName) brideName.textContent = wedding.bride;
+    }
+    if (wedding.groom) {
+      const groomName = document.getElementById('groom-name');
+      if (groomName) groomName.textContent = wedding.groom;
+    }
+    if (wedding.weddingDateDisplay) {
+      const heroDate = document.getElementById('hero-date');
+      if (heroDate) heroDate.textContent = wedding.weddingDateDisplay;
+    }
+    if (wedding.venueName && wedding.weddingTimeDisplay) {
+      const heroVenue = document.getElementById('hero-venue-mini');
+      if (heroVenue) heroVenue.textContent = `${wedding.venueName} · ${wedding.weddingTimeDisplay}`;
+    }
+    if (wedding.coupleHashtag) {
+      const heroHashtag = document.getElementById('hero-hashtag');
+      if (heroHashtag) heroHashtag.textContent = wedding.coupleHashtag;
+    }
+    
+    // Update message section
+    if (wedding.inviteMessage) {
+      const inviteMsg = document.getElementById('invite-message');
+      if (inviteMsg) inviteMsg.textContent = wedding.inviteMessage;
+    }
+    
+    // Update scratch card date
+    if (wedding.weddingDateDisplay) {
+      const scratchDate = document.getElementById('scratch-date-text');
+      if (scratchDate) scratchDate.textContent = wedding.weddingDateDisplay;
+    }
+    
+    // Update events grid
+    if (wedding.events && Array.isArray(wedding.events)) {
+      const grid = document.getElementById('events-grid');
+      if (grid) {
+        grid.innerHTML = wedding.events.map(ev => `
+          <div class="event-card">
+            <div class="event-icon">${ev.icon || '✨'}</div>
+            <div class="event-name">${ev.name || ''}</div>
+            <div class="event-date">${ev.date || ''}</div>
+            <div class="event-time">${ev.time || ''}</div>
+            <div class="event-venue">${ev.venue || ''}</div>
+          </div>`).join('');
+      }
+    }
+    
+    // Update dress code
+    if (wedding.dressCode) {
+      const dressType = document.getElementById('dress-type');
+      if (dressType) dressType.textContent = wedding.dressCode;
+    }
+    if (wedding.dressCodeColors) {
+      const dressColors = document.getElementById('dress-colors');
+      if (dressColors) dressColors.textContent = wedding.dressCodeColors;
+    }
+    
+    // Update venue
+    if (wedding.venueName) {
+      const venueName = document.getElementById('venue-name');
+      if (venueName) venueName.textContent = wedding.venueName;
+    }
+    if (wedding.venueAddress) {
+      const venueAddr = document.getElementById('venue-address');
+      if (venueAddr) venueAddr.textContent = wedding.venueAddress;
+    }
+    if (wedding.venueMapLink) {
+      const venueLink = document.getElementById('venue-link');
+      if (venueLink) venueLink.href = wedding.venueMapLink;
+    }
+    if (wedding.venueMapEmbedUrl) {
+      const venueMap = document.getElementById('venue-map');
+      if (venueMap) venueMap.src = wedding.venueMapEmbedUrl;
+    }
+    
+    // Update RSVP
+    if (wedding.rsvpDeadline) {
+      const rsvpDeadline = document.getElementById('rsvp-deadline-display');
+      if (rsvpDeadline) rsvpDeadline.textContent = wedding.rsvpDeadline;
+    }
+    
+    // Update music
+    if (wedding.musicUrl !== undefined) {
+      const audio = document.getElementById('bg-music');
+      if (audio) audio.src = wedding.musicUrl || '';
+    }
+    
+    // Update footer
+    if (wedding.footerNote) {
+      const footerNote = document.getElementById('footer-note');
+      if (footerNote) footerNote.textContent = wedding.footerNote;
+    }
+    
+    // Update photo slideshow
+    if (wedding.photos && Array.isArray(wedding.photos)) {
+      const track = document.getElementById('slideshow-track');
+      const dots = document.getElementById('slide-dots');
+      if (track && dots) {
+        track.innerHTML = '';
+        dots.innerHTML = '';
+        wedding.photos.forEach((src, i) => {
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = `Photo ${i+1}`;
+          img.className = 'slide-img';
+          img.onerror = () => { img.src = `https://placehold.co/800x460/1a4a3a/c9a84c?text=Photo+${i+1}`; };
+          track.appendChild(img);
+          
+          const dot = document.createElement('div');
+          dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
+          dot.onclick = () => { /* handled by slideshow */ };
+          dots.appendChild(dot);
+        });
+        // Reset slideshow state
+        if (typeof window.go === 'function') {
+          window.curSlide = 0;
+          window.go(0);
+        }
+      }
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────
 // 1. Particles
 // ─────────────────────────────────────────────────────────
 (function initParticles() {
