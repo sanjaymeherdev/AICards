@@ -102,14 +102,14 @@ module.exports = {
 
   function paintOverlay() {
     var grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, '#cfcfcf');
-    grad.addColorStop(0.5, '#efefef');
-    grad.addColorStop(1, '#b8b8b8');
+    grad.addColorStop(0, '#2a1a2a');
+    grad.addColorStop(0.5, '#3a2a3a');
+    grad.addColorStop(1, '#1a0a1a');
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
     ctx.font = '600 16px sans-serif';
-    ctx.fillStyle = '#8a8a8a';
+    ctx.fillStyle = '#c98ac9';
     ctx.textAlign = 'center';
     ctx.fillText('Scratch here', w / 2, h / 2);
   }

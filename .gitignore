@@ -1,1 +1,44 @@
-(public/wedding-cards/templates/blush-romance/style.css, public/wedding-cards/templates/ivory-minimal/style.css, public/wedding-cards/templates/love-romantic/style.css, public/wedding-cards/templates/purple-velvet/style.css, public/wedding-cards/templates/silver-elegance/style.css, public/wedding-cards/templates/sky-blue/style.css, public/wedding-cards/templates/sunset-glow/style.css)
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
+target/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+.mypy_cache/
+.pytest_cache/
+.gradle/
+julia-*/
+zig*/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# System files
+.DS_Store
+Thumbs.db
+```
