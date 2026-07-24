@@ -6,14 +6,14 @@
 
 /* ── CSS Variables ──────────────────────────────────────── */
 :root {
-  /* Pink Theme - Blush Romance */
+  /* BLUSH ROMANCE Theme */
   --bg-dark:      #2a1a1f;
   --bg-mid:       #3d2529;
   --c-primary:    #c2185b;
   --c-primary-light: #d81b60;
-  --c-gold:       #f48fb1;
-  --c-gold-light: #f8bbd9;
-  --c-gold-shine: #fce4ec;
+  --c-accent:     #f48fb1;
+  --c-accent-light: #f8bbd9;
+  --c-accent-shine: #fce4ec;
   --c-ivory:      #fff5f7;
   --text-muted:   #b89ba6;
   --particle-color: #f48fb1;
@@ -23,7 +23,7 @@
   --font-sans:    'Raleway', sans-serif;
 
   --transition:   0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  --glow:         0 0 30px rgba(244,143,177,0.3);
+  --glow:         0 0 30px rgba(194,24,91,0.3);
   --shadow-deep:  0 20px 60px rgba(0,0,0,0.5);
 
   /* RGBA variants for gradients and overlays */
@@ -40,18 +40,16 @@
   --c-primary-80: rgba(194,24,91,0.8);
   --c-primary-85: rgba(194,24,91,0.85);
 
-  /* Legacy aliases for backward compatibility */
-  --pink:         var(--c-primary);
-  --pink-mid:     var(--c-primary-light);
-  --pink-light:   var(--c-primary-light);
-  --rose:         var(--c-gold);
-  --rose-light:   var(--c-gold-light);
-  --rose-shine:   var(--c-gold-shine);
-  --cream:        var(--c-ivory);
-  --cream-dark:   #ffeef2;
-  --dark:         var(--bg-dark);
-  --dark-mid:     var(--bg-mid);
-  --text-light:   var(--c-ivory);
+  /* Theme color aliases - use these throughout the template */
+  --pink: var(--c-accent);
+  --pink-mid: var(--c-primary);
+  --pink-light: var(--c-accent-light);
+  --pink-shine: var(--c-accent-shine);
+  --cream: var(--c-ivory);
+  --cream-dark: #ffeef2;
+  --dark: var(--bg-dark);
+  --dark-mid: var(--bg-mid);
+  --text-light: var(--c-ivory);
 }
 
 /* ── Reset & Base ───────────────────────────────────────── */
