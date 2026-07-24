@@ -1,56 +1,55 @@
 /* ============================================================
-   EMERALD NOIR — Wedding Invitation Stylesheet
+   SILVER ELEGANCE — Wedding Invitation Stylesheet
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&display=swap');
 
 /* ── CSS Variables ──────────────────────────────────────── */
 :root {
-  --bg-dark:      #0a1a14;
-  --bg-mid:       #0f2a1e;
-  --c-primary:    #1a4a3a;
-  --c-primary-light: #1f5c48;
-  --c-gold:       #c9a84c;
-  --c-gold-light: #e8c97a;
-  --c-gold-shine: #f5e0a0;
-  --c-ivory:      #f5f0e8;
-  --text-muted:   #a09070;
-  --particle-color: #c9a84c;
+  /* SILVER ELEGANCE Theme */
+  --bg-dark:      #0a0f14;
+  --bg-mid:       #141a1f;
+  --c-primary:    #3a4a5a;
+  --c-primary-light: #4a5a6a;
+  --c-accent:     #c0c8d0;
+  --c-accent-light: #d8dee4;
+  --c-accent-shine: #e8eef4;
+  --c-ivory:      #f5f8fa;
+  --text-muted:   #8a95a0;
+  --particle-color: #c0c8d0;
 
   --font-display: 'Cinzel', serif;
   --font-body:    'Cormorant Garamond', serif;
   --font-sans:    'Raleway', sans-serif;
 
   --transition:   0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  --glow:         0 0 30px rgba(201,168,76,0.3);
+  --glow:         0 0 30px rgba(58,74,90,0.3);
   --shadow-deep:  0 20px 60px rgba(0,0,0,0.5);
 
   /* RGBA variants for gradients and overlays */
-  --bg-dark-60:   rgba(10,26,20,0.6);
-  --bg-dark-70:   rgba(10,26,20,0.7);
-  --bg-dark-80:   rgba(10,26,20,0.8);
-  --bg-dark-85:   rgba(10,26,20,0.85);
-  --bg-dark-90:   rgba(10,26,20,0.9);
-  --c-primary-18: rgba(26,74,58,0.18);
-  --c-primary-20: rgba(26,74,58,0.2);
-  --c-primary-25: rgba(26,74,58,0.25);
-  --c-primary-35: rgba(26,74,58,0.35);
-  --c-primary-50: rgba(26,74,58,0.5);
-  --c-primary-80: rgba(26,74,58,0.8);
-  --c-primary-85: rgba(26,74,58,0.85);
+  --bg-dark-60:   rgba(10,15,20,0.6);
+  --bg-dark-70:   rgba(10,15,20,0.7);
+  --bg-dark-80:   rgba(10,15,20,0.8);
+  --bg-dark-85:   rgba(10,15,20,0.85);
+  --bg-dark-90:   rgba(10,15,20,0.9);
+  --c-primary-18: rgba(58,74,90,0.18);
+  --c-primary-20: rgba(58,74,90,0.2);
+  --c-primary-25: rgba(58,74,90,0.25);
+  --c-primary-35: rgba(58,74,90,0.35);
+  --c-primary-50: rgba(58,74,90,0.5);
+  --c-primary-80: rgba(58,74,90,0.8);
+  --c-primary-85: rgba(58,74,90,0.85);
 
-  /* Legacy aliases for backward compatibility */
-  --emerald:      var(--c-primary);
-  --emerald-mid:  var(--c-primary-light);
-  --emerald-light:#2d7a60;
-  --gold:         var(--c-gold);
-  --gold-light:   var(--c-gold-light);
-  --gold-shine:   var(--c-gold-shine);
-  --ivory:        var(--c-ivory);
-  --ivory-dark:   #e8dfc8;
-  --dark:         var(--bg-dark);
-  --dark-mid:     var(--bg-mid);
-  --text-light:   var(--c-ivory);
+  /* Theme color aliases - use these throughout the template */
+  --silver: var(--c-accent);
+  --silver-mid: var(--c-primary);
+  --silver-light: var(--c-accent-light);
+  --silver-shine: var(--c-accent-shine);
+  --cream: var(--c-ivory);
+  --cream-dark: #f0e8d8;
+  --dark: var(--bg-dark);
+  --dark-mid: var(--bg-mid);
+  --text-light: var(--c-ivory);
 }
 
 /* ── Reset & Base ───────────────────────────────────────── */
