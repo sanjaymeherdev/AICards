@@ -26,6 +26,20 @@
   --glow:         0 0 30px rgba(244,143,177,0.3);
   --shadow-deep:  0 20px 60px rgba(0,0,0,0.5);
 
+  /* RGBA variants for gradients and overlays */
+  --bg-dark-60:   rgba(42,26,31,0.6);
+  --bg-dark-70:   rgba(42,26,31,0.7);
+  --bg-dark-80:   rgba(42,26,31,0.8);
+  --bg-dark-85:   rgba(42,26,31,0.85);
+  --bg-dark-90:   rgba(42,26,31,0.9);
+  --c-primary-18: rgba(194,24,91,0.18);
+  --c-primary-20: rgba(194,24,91,0.2);
+  --c-primary-25: rgba(194,24,91,0.25);
+  --c-primary-35: rgba(194,24,91,0.35);
+  --c-primary-50: rgba(194,24,91,0.5);
+  --c-primary-80: rgba(194,24,91,0.8);
+  --c-primary-85: rgba(194,24,91,0.85);
+
   /* Legacy aliases for backward compatibility */
   --pink:         var(--c-primary);
   --pink-mid:     var(--c-primary-light);
