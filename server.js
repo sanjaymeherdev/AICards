@@ -13,6 +13,9 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { generateSectionUpdates, generateSectionUpdatesStream, applyUpdatesToTemplate } = require('./lib/ai');
 const { getPool } = require('./lib/db');
 
@@ -31,6 +34,16 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Rate limiter for auth endpoints (prevent brute force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per window
+  message: { error: 'Too many authentication attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const WEDDING_CARDS_DIR = path.join(__dirname, 'public', 'wedding-cards');
 const AI_DESIGN_DIR = path.join(__dirname, 'public', 'ai-card-design');
@@ -45,6 +58,37 @@ app.use(express.static(WEDDING_CARDS_DIR));
 
 // AICardDesign (the modular section-based builder) lives at /ai-design
 app.use('/ai-design', express.static(AI_DESIGN_DIR));
+
+// ---------------------------------------------------------------------------
+// Authentication middleware — verifies JWT token from Authorization header
+// and attaches user info to req.user if valid. Used to protect routes that
+// require login (e.g., card creation/editing).
+// ---------------------------------------------------------------------------
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const token = authHeader.substring(7);
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// Helper to extract client IP (handles proxy/X-Forwarded-For)
+function getClientIP(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    // X-Forwarded-For can contain multiple IPs; take the first one
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || req.connection.remoteAddress || 'unknown';
+}
 
 // ---------------------------------------------------------------------------
 // AICardDesign API — read every design .js file inside sections/<sectionType>/
@@ -423,6 +467,300 @@ app.post('/api/card', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Authentication API — signup/login with email + password, one account per IP
+// ---------------------------------------------------------------------------
+
+// POST /api/auth/signup — create a new user account
+// Requires: email, password
+// Enforces: unique email, one account per IP address
+app.post('/api/auth/signup', authLimiter, async (req, res) => {
+  const { email, password } = req.body || {};
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  // Password strength check (at least 6 characters)
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+  }
+
+  const clientIP = getClientIP(req);
+  
+  try {
+    const pool = getPool();
+    
+    // Check if email already exists
+    const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (emailCheck.rows.length > 0) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    // Check if IP already has an account (one account per IP)
+    const ipCheck = await pool.query('SELECT id FROM users WHERE ip_address = $1', [clientIP]);
+    if (ipCheck.rows.length > 0) {
+      return res.status(409).json({ error: 'An account already exists for this IP address. Only one account per IP is allowed.' });
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    // Create user
+    const result = await pool.query(
+      `INSERT INTO users (email, password_hash, ip_address, created_at, updated_at)
+       VALUES ($1, $2, $3, NOW(), NOW())
+       RETURNING id, email, created_at`,
+      [email, passwordHash, clientIP]
+    );
+
+    const user = result.rows[0];
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.status(201).json({
+      message: 'Account created successfully',
+      user: { id: user.id, email: user.email, createdAt: user.created_at },
+      token,
+    });
+  } catch (err) {
+    console.error('Signup error:', err);
+    return res.status(500).json({ error: 'Failed to create account. Please try again.' });
+  }
+});
+
+// POST /api/auth/login — authenticate user with email + password
+app.post('/api/auth/login', authLimiter, async (req, res) => {
+  const { email, password } = req.body || {};
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  try {
+    const pool = getPool();
+    
+    // Find user by email
+    const result = await pool.query(
+      'SELECT id, email, password_hash, created_at FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = result.rows[0];
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      message: 'Login successful',
+      user: { id: user.id, email: user.email, createdAt: user.created_at },
+      token,
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    return res.status(500).json({ error: 'Failed to login. Please try again.' });
+  }
+});
+
+// GET /api/auth/me — get current user info (protected route)
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT id, email, created_at FROM users WHERE id = $1',
+      [req.user.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    return res.json({
+      user: { id: user.id, email: user.email, createdAt: user.created_at },
+    });
+  } catch (err) {
+    console.error('Get user error:', err);
+    return res.status(500).json({ error: 'Failed to get user info' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Protected Card API — database-backed card storage for authenticated users
+// ---------------------------------------------------------------------------
+
+// GET /api/cards — list all cards for the authenticated user
+app.get('/api/cards', authMiddleware, async (req, res) => {
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT id, slug, template_id, status, data, created_at, updated_at FROM cards WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.userId]
+    );
+
+    return res.json({ cards: result.rows });
+  } catch (err) {
+    console.error('List cards error:', err);
+    return res.status(500).json({ error: 'Failed to list cards' });
+  }
+});
+
+// GET /api/cards/:slug — get a specific card by slug (authenticated)
+app.get('/api/cards/:slug', authMiddleware, async (req, res) => {
+  const { slug } = req.params;
+  
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT id, slug, template_id, status, data, created_at, updated_at FROM cards WHERE user_id = $1 AND slug = $2',
+      [req.user.userId, slug]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    return res.json({ card: result.rows[0] });
+  } catch (err) {
+    console.error('Get card error:', err);
+    return res.status(500).json({ error: 'Failed to get card' });
+  }
+});
+
+// POST /api/cards — create a new card (authenticated)
+app.post('/api/cards', authMiddleware, async (req, res) => {
+  const { slug, template_id, status = 'draft', data = {} } = req.body || {};
+  
+  if (!slug || !template_id) {
+    return res.status(400).json({ error: 'slug and template_id are required' });
+  }
+
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      `INSERT INTO cards (user_id, slug, template_id, status, data, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       ON CONFLICT (user_id, slug) DO UPDATE SET
+         template_id = excluded.template_id,
+         status = excluded.status,
+         data = excluded.data,
+         updated_at = NOW()
+       RETURNING id, slug, template_id, status, data, created_at, updated_at`,
+      [req.user.userId, slug, template_id, status, JSON.stringify(data)]
+    );
+
+    return res.status(201).json({ card: result.rows[0] });
+  } catch (err) {
+    console.error('Create card error:', err);
+    return res.status(500).json({ error: 'Failed to create card' });
+  }
+});
+
+// PUT /api/cards/:slug — update an existing card (authenticated)
+app.put('/api/cards/:slug', authMiddleware, async (req, res) => {
+  const { slug } = req.params;
+  const { template_id, status, data } = req.body || {};
+  
+  try {
+    const pool = getPool();
+    
+    // First verify the card belongs to this user
+    const checkResult = await pool.query(
+      'SELECT id FROM cards WHERE user_id = $1 AND slug = $2',
+      [req.user.userId, slug]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (template_id !== undefined) {
+      updates.push(`template_id = $${paramIndex++}`);
+      values.push(template_id);
+    }
+    if (status !== undefined) {
+      updates.push(`status = $${paramIndex++}`);
+      values.push(status);
+    }
+    if (data !== undefined) {
+      updates.push(`data = $${paramIndex++}`);
+      values.push(JSON.stringify(data));
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    updates.push(`updated_at = NOW()`);
+    values.push(req.user.userId);
+    values.push(slug);
+
+    const result = await pool.query(
+      `UPDATE cards SET ${updates.join(', ')} 
+       WHERE user_id = $${paramIndex++} AND slug = $${paramIndex}
+       RETURNING id, slug, template_id, status, data, created_at, updated_at`,
+      values
+    );
+
+    return res.json({ card: result.rows[0] });
+  } catch (err) {
+    console.error('Update card error:', err);
+    return res.status(500).json({ error: 'Failed to update card' });
+  }
+});
+
+// DELETE /api/cards/:slug — delete a card (authenticated)
+app.delete('/api/cards/:slug', authMiddleware, async (req, res) => {
+  const { slug } = req.params;
+  
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      'DELETE FROM cards WHERE user_id = $1 AND slug = $2 RETURNING id',
+      [req.user.userId, slug]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    return res.json({ message: 'Card deleted successfully' });
+  } catch (err) {
+    console.error('Delete card error:', err);
+    return res.status(500).json({ error: 'Failed to delete card' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Slug fallback — a published invitation lives at a plain URL like
 // "yoursite.com/john-jane", which isn't a real file on disk. express.static
 // above only serves files that exist, so anything else falls through to
@@ -430,7 +768,12 @@ app.post('/api/card', (req, res) => {
 // .css/.js/.png etc.) and isn't under /api, /ai-design, or /templates, serve
 // the WeddingCards index.html so its client-side script can look the slug
 // up via /api/card and redirect to the right template.
+// Also serve auth.html at /auth route
 // ---------------------------------------------------------------------------
+app.get('/auth', (req, res) => {
+  res.sendFile(path.join(WEDDING_CARDS_DIR, 'auth.html'));
+});
+
 app.get(/^\/(?!api|ai-design|templates)[^./]+$/, (req, res) => {
   res.sendFile(path.join(WEDDING_CARDS_DIR, 'index.html'));
 });

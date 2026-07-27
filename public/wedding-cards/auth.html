@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication - Wedding Cards</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      background: #f8f9fa;
+      border: none;
+      font-size: 16px;
+      font-weight: 500;
+      color: #666;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      background: white;
+      color: #667eea;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .form-container {
+      padding: 32px;
+    }
+
+    .form {
+      display: none;
+    }
+
+    .form.active {
+      display: block;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 24px;
+      font-size: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .message.error {
+      background: #fee;
+      color: #c00;
+    }
+
+    .message.success {
+      background: #efe;
+      color: #060;
+    }
+
+    .user-info {
+      display: none;
+      text-align: center;
+      padding: 32px;
+    }
+
+    .user-info.active {
+      display: block;
+    }
+
+    .user-info h3 {
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .user-info p {
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .logout-btn {
+      padding: 12px 24px;
+      background: #f0f0f0;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .note {
+      margin-top: 20px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="showForm('login')">Login</button>
+      <button class="tab" onclick="showForm('signup')">Sign Up</button>
+    </div>
+
+    <div class="form-container">
+      <div id="message"></div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="form active" onsubmit="handleLogin(event)">
+        <h2>Welcome Back</h2>
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="Enter your password">
+        </div>
+        <button type="submit" id="login-btn">Login</button>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="signup-form" class="form" onsubmit="handleSignup(event)">
+        <h2>Create Account</h2>
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" required placeholder="At least 6 characters" minlength="6">
+        </div>
+        <button type="submit" id="signup-btn">Create Account</button>
+        <div class="note">
+          <strong>Note:</strong> For security, only one account is allowed per IP address.
+        </div>
+      </form>
+
+      <!-- User Info (shown when logged in) -->
+      <div id="user-info" class="user-info">
+        <h3>You're Logged In!</h3>
+        <p id="user-email"></p>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = ''; // Same origin
+
+    // Check if user is already logged in on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+    });
+
+    function showForm(type) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
+      
+      if (type === 'login') {
+        document.querySelector('.tab:first-child').classList.add('active');
+        document.getElementById('login-form').classList.add('active');
+      } else {
+        document.querySelector('.tab:last-child').classList.add('active');
+        document.getElementById('signup-form').classList.add('active');
+      }
+      
+      hideMessage();
+    }
+
+    function showMessage(text, isError = false) {
+      const msgEl = document.getElementById('message');
+      msgEl.textContent = text;
+      msgEl.className = 'message ' + (isError ? 'error' : 'success');
+      msgEl.style.display = 'block';
+    }
+
+    function hideMessage() {
+      document.getElementById('message').style.display = 'none';
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('login-btn');
+
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Login failed');
+        }
+
+        // Store token
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        showMessage('Login successful! Redirecting...');
+        setTimeout(() => checkAuth(), 1000);
+      } catch (err) {
+        showMessage(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Login';
+      }
+    }
+
+    async function handleSignup(event) {
+      event.preventDefault();
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const btn = document.getElementById('signup-btn');
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Signup failed');
+        }
+
+        // Store token
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        showMessage('Account created successfully!');
+        setTimeout(() => checkAuth(), 1000);
+      } catch (err) {
+        showMessage(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+
+    async function checkAuth() {
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        showForms();
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          throw new Error('Session expired');
+        }
+
+        const data = await response.json();
+        showLoggedIn(data.user);
+      } catch (err) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        showForms();
+      }
+    }
+
+    function showForms() {
+      document.querySelector('.tabs').style.display = 'flex';
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('signup-form').style.display = 'none';
+      document.getElementById('user-info').classList.remove('active');
+      document.getElementById('login-form').classList.add('active');
+    }
+
+    function showLoggedIn(user) {
+      document.querySelector('.tabs').style.display = 'none';
+      document.getElementById('login-form').classList.remove('active');
+      document.getElementById('signup-form').classList.remove('active');
+      document.getElementById('user-info').classList.add('active');
+      document.getElementById('user-email').textContent = user.email;
+    }
+
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      showForms();
+      showMessage('Logged out successfully');
+    }
+  </script>
+</body>
+</html>
