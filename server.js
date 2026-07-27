@@ -768,10 +768,14 @@ app.delete('/api/cards/:slug', authMiddleware, async (req, res) => {
 // .css/.js/.png etc.) and isn't under /api, /ai-design, or /templates, serve
 // the WeddingCards index.html so its client-side script can look the slug
 // up via /api/card and redirect to the right template.
-// Also serve auth.html at /auth route
+// Also serve auth.html at /auth route and profile.html at /profile route
 // ---------------------------------------------------------------------------
 app.get('/auth', (req, res) => {
   res.sendFile(path.join(WEDDING_CARDS_DIR, 'auth.html'));
+});
+
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(WEDDING_CARDS_DIR, 'profile.html'));
 });
 
 app.get(/^\/(?!api|ai-design|templates)[^./]+$/, (req, res) => {
