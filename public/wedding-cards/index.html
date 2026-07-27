@@ -22,6 +22,8 @@
                 <a href="#templates">Templates</a>
                 <a href="/ai-design/">AI Card Designer</a>
                 <a href="#features">Features</a>
+                <a href="/profile" id="nav-profile" style="display:none;"><i class="fas fa-user"></i> Profile</a>
+                <a href="/auth" id="nav-auth"><i class="fas fa-sign-in-alt"></i> Login</a>
             </nav>
         </header>
 
@@ -195,25 +197,49 @@
     </div>
 
     <script>
-           // Root index.html script
-   // Only treat the URL as an invitation link if there's an actual slug
-   // after the domain (e.g. yoursite.com/john-jane). A bare visit to "/"
-   // is just someone browsing the landing page, so skip the lookup then.
-   const slug = window.location.pathname.replace(/^\/|\/$/g, '');
-   if (slug) {
-     fetch(`/api/card?slug=${slug}`)
-       .then(res => res.json())
-       .then(data => {
-         if (data.status === 'draft') {
-           document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:#333;">🚧 This invitation is being prepared.</h1>';
-         } else if (data.status === 'published') {
-           // Redirect to the specific template's index.html, passing the slug
-           window.location.href = `/templates/${data.template_id}/index.html?slug=${slug}`;
-         } else {
-           document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:red;">Invitation not found.</h1>';
-         }
-       });
-   }
+        // Check authentication status and update nav
+        function updateAuthNav() {
+            const token = localStorage.getItem('authToken');
+            const profileLink = document.getElementById('nav-profile');
+            const authLink = document.getElementById('nav-auth');
+            
+            if (token) {
+                if (profileLink) profileLink.style.display = 'inline-block';
+                if (authLink) {
+                    authLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                    authLink.href = 'javascript:void(0)';
+                    authLink.onclick = function() {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('user');
+                        window.location.reload();
+                    };
+                }
+            }
+        }
+        
+        // Run on page load
+        updateAuthNav();
+
+        // Root index.html script
+        // Only treat the URL as an invitation link if there's an actual slug
+        // after the domain (e.g. yoursite.com/john-jane). A bare visit to "/"
+        // is just someone browsing the landing page, so skip the lookup then.
+        const slug = window.location.pathname.replace(/^\/|\/$/g, '');
+        if (slug) {
+          fetch(`/api/card?slug=${slug}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.status === 'draft') {
+                document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:#333;">🚧 This invitation is being prepared.</h1>';
+              } else if (data.status === 'published') {
+                // Redirect to the specific template's index.html, passing the slug
+                window.location.href = `/templates/${data.template_id}/index.html?slug=${slug}`;
+              } else {
+                document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:red;">Invitation not found.</h1>';
+              }
+            });
+        }
+        
         // Landing page functions
         function scrollToTemplates() {
             document.getElementById('templates').scrollIntoView({ behavior: 'smooth' });
