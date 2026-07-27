@@ -388,7 +388,203 @@
       URL.revokeObjectURL(url);
     }
 
+    // Authentication check
+    let isAuthenticated = false;
+    let currentSlug = null;
+    
+    function checkAuth() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        document.getElementById('auth-overlay').classList.remove('hidden');
+        document.getElementById('save-btn').disabled = true;
+        document.getElementById('share-btn').disabled = true;
+        return false;
+      }
+      isAuthenticated = true;
+      document.getElementById('auth-overlay').classList.add('hidden');
+      document.getElementById('save-btn').disabled = false;
+      document.getElementById('share-btn').disabled = false;
+      
+      // Check for slug in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      currentSlug = urlParams.get('slug');
+      
+      // If editing existing card, load it
+      if (currentSlug) {
+        loadCard(currentSlug);
+      }
+      return true;
+    }
+    
+    async function loadCard(slug) {
+      try {
+        const response = await fetch(`/api/cards/${slug}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const card = data.card;
+          if (card && card.data) {
+            // Load saved state into editor
+            const state = typeof card.data === 'string' ? JSON.parse(card.data) : card.data;
+            if (state.theme && state.theme.colors) {
+              const colors = state.theme.colors;
+              if (colors.bgDark) document.getElementById('bgDark').value = colors.bgDark;
+              if (colors.bgMid) document.getElementById('bgMid').value = colors.bgMid;
+              if (colors.primary) document.getElementById('primary').value = colors.primary;
+              if (colors.gold) document.getElementById('gold').value = colors.gold;
+              if (colors.ivory) document.getElementById('ivory').value = colors.ivory;
+              if (colors.particle) document.getElementById('particle').value = colors.particle;
+            }
+            if (state.wedding) {
+              const w = state.wedding;
+              if (w.bride) document.getElementById('bride').value = w.bride;
+              if (w.groom) document.getElementById('groom').value = w.groom;
+              if (w.brideFamily) document.getElementById('brideFamily').value = w.brideFamily;
+              if (w.groomFamily) document.getElementById('groomFamily').value = w.groomFamily;
+              if (w.coupleHashtag) document.getElementById('coupleHashtag').value = w.coupleHashtag;
+              if (w.weddingDateDisplay) document.getElementById('weddingDateDisplay').value = w.weddingDateDisplay;
+              if (w.weddingTimeDisplay) document.getElementById('weddingTimeDisplay').value = w.weddingTimeDisplay;
+              if (w.weddingDateTime) document.getElementById('weddingDateTime').value = w.weddingDateTime;
+              if (w.inviteMessage) document.getElementById('inviteMessage').value = w.inviteMessage;
+              if (w.footerNote) document.getElementById('footerNote').value = w.footerNote;
+              if (w.venueName) document.getElementById('venueName').value = w.venueName;
+              if (w.venueAddress) document.getElementById('venueAddress').value = w.venueAddress;
+              if (w.venueMapLink) document.getElementById('venueMapLink').value = w.venueMapLink;
+              if (w.venueMapEmbedUrl) document.getElementById('venueMapEmbedUrl').value = w.venueMapEmbedUrl;
+              if (w.dressCode) document.getElementById('dressCode').value = w.dressCode;
+              if (w.dressCodeColors) document.getElementById('dressCodeColors').value = w.dressCodeColors;
+              if (w.rsvpDeadline) document.getElementById('rsvpDeadline').value = w.rsvpDeadline;
+              if (w.rsvpWhatsApp) document.getElementById('rsvpWhatsApp').value = w.rsvpWhatsApp;
+              if (w.musicUrl) document.getElementById('musicUrl').value = w.musicUrl;
+              if (w.events && Array.isArray(w.events)) {
+                events.length = 0;
+                w.events.forEach(ev => events.push(ev));
+                renderEvents();
+              }
+              if (w.photos && Array.isArray(w.photos)) {
+                photos.length = 0;
+                w.photos.forEach(p => photos.push(p));
+                renderPhotos();
+              }
+            }
+            sendUpdate();
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load card:', err);
+      }
+    }
+    
+    async function saveCard() {
+      if (!isAuthenticated) {
+        alert('Please log in to save your card');
+        window.location.href = '/auth';
+        return;
+      }
+      
+      const statusEl = document.getElementById('save-status');
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'save-status saving';
+      statusEl.style.display = 'inline-block';
+      
+      try {
+        const state = getState();
+        const slug = currentSlug || generateSlug(state.wedding.bride, state.wedding.groom);
+        
+        const response = await fetch('/api/cards', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          body: JSON.stringify({
+            slug: slug,
+            template_id: 'emerald-classic',
+            status: 'draft',
+            data: state
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to save');
+        }
+        
+        const result = await response.json();
+        currentSlug = slug;
+        
+        // Update URL with slug
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('slug', slug);
+        window.history.replaceState({}, '', newUrl);
+        
+        statusEl.textContent = 'Saved!';
+        statusEl.className = 'save-status saved';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+      } catch (err) {
+        statusEl.textContent = 'Error saving';
+        statusEl.className = 'save-status error';
+        console.error('Save error:', err);
+      }
+    }
+    
+    async function shareCard() {
+      if (!currentSlug) {
+        alert('Please save the card first to get a shareable link');
+        saveCard();
+        return;
+      }
+      
+      const shareUrl = `${window.location.origin}/${currentSlug}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Wedding Invitation',
+            text: 'Check out our wedding invitation!',
+            url: shareUrl
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            copyToClipboard(shareUrl);
+          }
+        }
+      } else {
+        copyToClipboard(shareUrl);
+      }
+    }
+    
+    function copyToClipboard(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Link copied to clipboard! Share it with your guests: ' + text);
+        }).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+    
+    function fallbackCopy(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Link copied to clipboard! Share it with your guests: ' + text);
+    }
+    
+    function generateSlug(bride, groom) {
+      const names = [bride, groom].join('-').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      return names || 'wedding-invitation';
+    }
+
     // Initialize
+    checkAuth();
     renderEvents();
     renderPhotos();
     sendUpdate();

@@ -55,7 +55,7 @@
                     <p>Elegant green theme with gold accents</p>
                     <div class="template-actions">
                         <a href="templates/emerald-classic/index.html" class="btn-preview">Preview</a>
-                        <a href="templates/emerald-classic/editor.html" class="btn-edit">Edit</a>
+                        <a href="javascript:void(0)" onclick="checkAuthAndRedirect('emerald-classic')" class="btn-edit">Edit</a>
                     </div>
                 </div>
                 
@@ -243,6 +243,18 @@
         // Landing page functions
         function scrollToTemplates() {
             document.getElementById('templates').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Check authentication before redirecting to editor
+        function checkAuthAndRedirect(templateId) {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Not logged in, redirect to auth page with return URL
+                window.location.href = `/auth?redirect=/templates/${templateId}/editor.html`;
+            } else {
+                // Logged in, go directly to editor
+                window.location.href = `/templates/${templateId}/editor.html`;
+            }
         }
     </script>
 </body>

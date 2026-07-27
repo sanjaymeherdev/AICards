@@ -297,7 +297,17 @@
         localStorage.setItem('user', JSON.stringify(data.user));
 
         showMessage('Login successful! Redirecting...');
-        setTimeout(() => checkAuth(), 1000);
+        
+        // Check for redirect URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        setTimeout(() => {
+          if (redirect) {
+            window.location.href = redirect;
+          } else {
+            window.location.href = '/profile';
+          }
+        }, 1000);
       } catch (err) {
         showMessage(err.message, true);
       } finally {
@@ -333,7 +343,17 @@
         localStorage.setItem('user', JSON.stringify(data.user));
 
         showMessage('Account created successfully!');
-        setTimeout(() => checkAuth(), 1000);
+        
+        // Check for redirect URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        setTimeout(() => {
+          if (redirect) {
+            window.location.href = redirect;
+          } else {
+            window.location.href = '/profile';
+          }
+        }, 1000);
       } catch (err) {
         showMessage(err.message, true);
       } finally {
