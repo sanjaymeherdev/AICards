@@ -1,51 +1,45 @@
-# Examples 1:
-
-(empty — output nothing)
-
-# Example 2 (Project with artifacts):
-
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-dist/
-build/
-target/
-
+```
 # Dependencies
-.venv/
-venv/
 node_modules/
-.julia/
-zig-cache/
-.deps/
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-*.swo
 
 # Environment
 .env
 .env.local
 .env.*
 
-# Editors
+# Logs
+*.log
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Cache directories
+.cache/
+.node_cache/
+.npm/
+.yarn/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# Package management
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Coverage
-.coverage
+# Coverage reports
 coverage/
 htmlcov/
-
-# Original rules preserved
-*.log
+.coverage
+```
