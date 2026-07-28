@@ -55,7 +55,7 @@ const CARDS_DB_PATH = path.join(__dirname, 'data', 'cards.json');
 // ---------------------------------------------------------------------------
 // WeddingCards is the main site, mounted at "/"
 app.use(express.static(WEDDING_CARDS_DIR));
-
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 // AICardDesign (the modular section-based builder) lives at /ai-design
 app.use('/ai-design', express.static(AI_DESIGN_DIR));
 
