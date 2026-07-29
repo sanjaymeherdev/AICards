@@ -390,10 +390,11 @@
 
     function showForms() {
       document.querySelector('.tabs').style.display = 'flex';
-      document.getElementById('login-form').style.display = 'block';
-      document.getElementById('signup-form').style.display = 'none';
+      document.getElementById('login-form').classList.remove('active');
+      document.getElementById('signup-form').classList.remove('active');
       document.getElementById('user-info').classList.remove('active');
       document.getElementById('login-form').classList.add('active');
+      hideMessage();
     }
 
     function showLoggedIn(user) {
