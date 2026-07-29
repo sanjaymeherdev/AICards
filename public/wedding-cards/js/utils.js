@@ -52,8 +52,8 @@ const Auth = {
 
     requireAuth(redirectUrl) {
         if (!this.isAuthenticated()) {
-            const currentUrl = encodeURIComponent(window.location.href);
-            window.location.href = `/wedding-cards/auth.html?redirect=${currentUrl}`;
+            const currentUrl = encodeURIComponent(redirectUrl || window.location.href);
+            window.location.href = `/auth?redirect=${currentUrl}`;
             return false;
         }
         return true;
