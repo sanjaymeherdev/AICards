@@ -229,10 +229,9 @@
 
     // Save Draft - saves to database without sharing (requires auth)
     async function saveDraft() {
-      if (!Auth.isAuthenticated()) {
-        Auth.requireAuth();
-        return;
-      }
+      // Auth is NOT required for saving drafts (Task 2)
+      // Only required for sharing cards
+
       
       const state = getState();
       const cardData = {
@@ -243,6 +242,13 @@
       };
       
       try {
+        // For non-authenticated users, save to localStorage as fallback
+        if (!Auth.isAuthenticated()) {
+          localStorage.setItem('draft_' + currentTemplateName, JSON.stringify(cardData));
+          alert('✅ Draft saved locally! You can continue editing anytime. Note: Login to save to cloud.');
+          return;
+        }
+
         const result = await CardUtils.saveCard(cardData, null);
         alert('✅ Draft saved successfully! You can continue editing anytime.');
         currentCardId = result.id;
