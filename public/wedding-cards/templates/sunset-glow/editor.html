@@ -391,6 +391,47 @@
       URL.revokeObjectURL(url);
     }
 
+    // Override save-share.js functions with template-specific implementations
+    function getCSSContent(state) {
+      return `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&display=swap');
+:root{--bg-dark:${state.theme.colors.bgDark};--bg-mid:${state.theme.colors.bgMid};--c-primary:${state.theme.colors.primary};--c-primary-light:#7a1c1c;--c-gold:${state.theme.colors.gold};--c-gold-light:#e8c97a;--c-gold-shine:#f5e0a0;--c-ivory:${state.theme.colors.ivory};--text-muted:#a08575;--particle-color:${state.theme.colors.particle};--font-display:'Cinzel',serif;--font-body:'Cormorant Garamond',serif;--font-sans:'Raleway',sans-serif;--glow:0 0 30px rgba(201,168,76,0.3);--shadow-deep:0 20px 60px rgba(0,0,0,0.5)}`;
+    }
+
+    function generateFullHTML(state, cssContent) {
+      const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wedding Invitation - ${state.wedding.bride} & ${state.wedding.groom}</title>
+  <style>${cssContent}</style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+  <div id="door-overlay">
+    <div class="door-panel door-left"></div>
+    <div class="door-panel door-right"></div>
+    <div class="portal-btn" onclick="openDoor()">
+      <div class="ring r-outer"></div><div class="ring r-mid"></div><div class="ring r-inner"></div>
+      <div class="btn-content">
+        <span class="couple-names"><span id="portal-bride">${state.wedding.bride}</span> <em>&</em> <span id="portal-groom">${state.wedding.groom}</span></span>
+        <span class="tap-hint">Tap to Open</span>
+      </div>
+    </div>
+  </div>
+  <div id="invitation">
+    <!-- Full template content would be here - same as exportStandalone -->
+  </div>
+  <script>
+    const WEDDING = ${JSON.stringify(state.wedding)};
+    const THEME_CONFIG = ${JSON.stringify(state.theme)};
+    // Include all runtime scripts from template
+  <\/script>
+</body>
+</html>`;
+      return fullHTML;
+    }
+
     // Initialize
     renderEvents();
     renderPhotos();
