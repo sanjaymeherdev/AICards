@@ -40,7 +40,9 @@
   <div class="editor">
     <div class="editor-header">
       <h2>✦ Invitation Editor</h2>
-      <button onclick="exportStandalone()" style="width:auto; margin:0; padding: 8px 16px; font-size: 0.8rem;">⬇ Export</button>
+      <div style="display:flex;gap:8px">
+        <button onclick="saveAndShare()" style="width:auto; margin:0; padding: 8px 16px; font-size: 0.8rem;background:#10b981;color:white;">💾 Save & Share</button>
+        <button onclick="exportStandalone()" style="width:auto; margin:0; padding: 8px 16px; font-size: 0.8rem;">⬇ Export</button>
     </div>
     
     <div class="tabs">
@@ -107,6 +109,8 @@
     <iframe id="preview-frame" src="index.html"></iframe>
   </div>
 
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/save-share.js"></script>
   <script>
     let events = [
       { name: "Mehendi Ceremony", date: "3rd December", time: "11:00 AM", venue: "Sharma Residence", icon: "🌿" },
@@ -272,6 +276,8 @@
     <div class="music-label-tooltip" id="music-tooltip">Background Music</div>
     <audio id="bg-music" loop></audio>
   </div>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/save-share.js"></script>
   <script>
     const THEME_CONFIG = ${JSON.stringify({ name: "maroon", colors: state.theme.colors })};
     const WEDDING = ${JSON.stringify(state.wedding)};
