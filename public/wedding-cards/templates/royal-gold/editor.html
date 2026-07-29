@@ -697,6 +697,12 @@
       }
     }
 
+    // Override save-share.js functions with template-specific implementations
+    function getCSSContent(state) {
+      return `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@0,400;0,600;0,700;1,300;1,400&family=Raleway:wght@0,300;0,400;0,500&display=swap');
+:root{--bg-dark:${state.theme.colors.bgDark};--bg-mid:${state.theme.colors.bgMid};--c-primary:${state.theme.colors.primary};--c-primary-light:#7a1c1c;--c-gold:${state.theme.colors.gold};--c-gold-light:#e8c97a;--c-gold-shine:#f5e0a0;--c-ivory:${state.theme.colors.ivory};--text-muted:#a08575;--particle-color:${state.theme.colors.particle};--font-display:'Cinzel',serif;--font-body:'Cormorant Garamond',serif;--font-sans:'Raleway',sans-serif;--glow:0 0 30px rgba(201,168,76,0.3);--shadow-deep:0 20px 60px rgba(0,0,0,0.5)}`;
+    }
+
     function generateFullHTML(state, cssContent) {
       // Reuse the exact same HTML generation from exportStandalone
       const fullHTML = `<!DOCTYPE html>
