@@ -35,6 +35,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const PAYMENT_API_URL = process.env.PAYMENT_API_URL || 'http://localhost:3001';
+const PAYMENT_API_KEY = process.env.PAYMENT_API_KEY || '';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 // Rate limiter for auth endpoints (prevent brute force)
 const authLimiter = rateLimit({
@@ -502,21 +505,15 @@ app.post('/api/auth/signup', authLimiter, async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // Check if IP already has an account (one account per IP)
-    const ipCheck = await pool.query('SELECT id FROM users WHERE ip_address = $1', [clientIP]);
-    if (ipCheck.rows.length > 0) {
-      return res.status(409).json({ error: 'An account already exists for this IP address. Only one account per IP is allowed.' });
-    }
-
     // Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Create user
+    // Create user (IP address stored but no longer unique-constrained)
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, ip_address, created_at, updated_at)
-       VALUES ($1, $2, $3, NOW(), NOW())
-       RETURNING id, email, created_at`,
+      `INSERT INTO users (email, password_hash, ip_address, is_premium, created_at, updated_at)
+       VALUES ($1, $2, $3, false, NOW(), NOW())
+       RETURNING id, email, is_premium, created_at`,
       [email, passwordHash, clientIP]
     );
 
@@ -592,7 +589,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
-      'SELECT id, email, created_at FROM users WHERE id = $1',
+      'SELECT id, email, is_premium, created_at FROM users WHERE id = $1',
       [req.user.userId]
     );
 
@@ -602,7 +599,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 
     const user = result.rows[0];
     return res.json({
-      user: { id: user.id, email: user.email, createdAt: user.created_at },
+      user: { id: user.id, email: user.email, isPremium: user.is_premium, createdAt: user.created_at },
     });
   } catch (err) {
     console.error('Get user error:', err);
