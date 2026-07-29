@@ -893,23 +893,34 @@
         <div class="step-panel" data-step="5">
             <h2 class="step-title">📤 Share Your Invitation</h2>
             <p class="step-subtitle">Your card is ready! Share the link with friends and family.</p>
-            <div class="share-row">
-                <button class="share-btn link" onclick="copyLink()"><i class="fas fa-link"></i> Copy Link</button>
-                <button class="share-btn whatsapp" onclick="shareCard('whatsapp')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-                <button class="share-btn instagram" onclick="shareCard('instagram')"><i class="fab fa-instagram"></i> Instagram</button>
-                <button class="share-btn email" onclick="shareCard('email')"><i class="fas fa-envelope"></i> Email</button>
+            <div id="share-content">
+                <div class="share-row">
+                    <button class="share-btn link" onclick="copyLink()"><i class="fas fa-link"></i> Copy Link</button>
+                    <button class="share-btn whatsapp" onclick="shareCard('whatsapp')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                    <button class="share-btn instagram" onclick="shareCard('instagram')"><i class="fab fa-instagram"></i> Instagram</button>
+                    <button class="share-btn email" onclick="shareCard('email')"><i class="fas fa-envelope"></i> Email</button>
+                </div>
+                <div class="qr-section">
+                    <div class="qr-placeholder"><i class="fas fa-qrcode" style="font-size:3rem;color:var(--primary-maroon);"></i></div>
+                    <div style="text-align:left;">
+                        <p style="font-weight:600;color:var(--primary-maroon);font-size:1.1rem;">Scan to View</p>
+                        <p style="font-size:0.85rem;color:var(--text-muted);margin:4px 0 12px;">Point your camera at the QR code to open the invitation.</p>
+                        <button class="btn btn-secondary" onclick="alert('QR Code downloaded!')"><i class="fas fa-download"></i> Download QR</button>
+                    </div>
+                </div>
             </div>
-            <div class="qr-section">
-                <div class="qr-placeholder"><i class="fas fa-qrcode" style="font-size:3rem;color:var(--primary-maroon);"></i></div>
-                <div style="text-align:left;">
-                    <p style="font-weight:600;color:var(--primary-maroon);font-size:1.1rem;">Scan to View</p>
-                    <p style="font-size:0.85rem;color:var(--text-muted);margin:4px 0 12px;">Point your camera at the QR code to open the invitation.</p>
-                    <button class="btn btn-secondary" onclick="alert('QR Code downloaded!')"><i class="fas fa-download"></i> Download QR</button>
+            <div id="paywall-message" style="display:none;text-align:center;padding:20px;">
+                <div style="font-size:48px;margin-bottom:16px;">💎</div>
+                <h3 style="color:var(--primary-maroon);margin-bottom:12px;">Upgrade to Share</h3>
+                <p style="color:#666;margin-bottom:20px;">Get a custom shareable link for your invitation</p>
+                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                    <button class="btn btn-gold" onclick="Auth.showPaymentModal(AppState.cardId)">Premium ₹5,000</button>
+                    <button class="btn btn-primary" onclick="Auth.showPaymentModal(AppState.cardId)">Per Template ₹1,000</button>
                 </div>
             </div>
             <div class="nav-buttons">
                 <button class="btn btn-secondary" onclick="goToStep(4)"><i class="fas fa-arrow-left"></i> Back</button>
-                <button class="btn btn-gold" onclick="alert('🎉 Published!')"><i class="fas fa-check-circle"></i> Done</button>
+                <button class="btn btn-gold" onclick="saveAndShare()"><i class="fas fa-save"></i> Save & Get Link</button>
             </div>
         </div>
     </div>
@@ -2533,42 +2544,87 @@
             }
         }
 
-        async function saveCard() {
+        async function saveAndShare() {
+            // Check authentication first
+            if (!Auth.isAuthenticated()) {
+                Auth.requireAuth();
+                return;
+            }
+
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
             try {
+                // Prepare card data
                 const cardData = {
                     section_order: AppState.sectionOrder,
                     sections: AppState.sectionData,
                     opening_base_id: AppState.selectedOpening,
                     theme: AppState.theme,
                     page_effects: AppState.pageEffects,
-                    status: 'draft'
+                    status: 'draft',
+                    is_ai_design: true
                 };
 
-                const result = await UIRenderer.db.saveCard(cardData);
-                alert(`✅ Card saved to database! ID: ${result.id}, Slug: ${result.slug}`);
+                // Save the card
+                const result = await CardUtils.saveCard(cardData, null);
+                AppState.cardId = result.id;
+                AppState.currentSlug = result.share_slug || result.slug;
+
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+
+                // Check if paid/premium
+                const user = Auth.getUser();
+                const isPaid = result.is_paid || (user && user.is_premium);
+
+                if (isPaid) {
+                    // Show share options
+                    document.getElementById('share-content').style.display = 'block';
+                    document.getElementById('paywall-message').style.display = 'none';
+                    alert(`✅ Card saved! Your share link: ${CardUtils.getShareUrl(result.share_slug || result.slug)}`);
+                } else {
+                    // Show paywall
+                    document.getElementById('share-content').style.display = 'none';
+                    document.getElementById('paywall-message').style.display = 'block';
+                }
             } catch (error) {
                 console.error('Save failed:', error);
-                alert('Failed to save card. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                alert('Failed to save card: ' + error.message);
             }
         }
 
+        async function saveCard() {
+            // Redirect to saveAndShare for unified flow
+            saveAndShare();
+        }
+
         function copyLink() {
-            const slug = AppState.cardId || 'new-card';
-            navigator.clipboard.writeText(`https://yourdomain.com/card/${slug}`);
-            alert('✅ Link copied!');
+            const slug = AppState.currentSlug || AppState.cardId;
+            if (!slug) {
+                alert('Please save the card first to get a share link');
+                return;
+            }
+            CardUtils.copyLink(slug);
         }
 
         function shareCard(platform) {
-            const slug = AppState.cardId || 'new-card';
-            const url = `https://yourdomain.com/card/${slug}`;
-            const text = '💕 Check out our wedding invitation!';
+            const slug = AppState.currentSlug || AppState.cardId;
+            if (!slug) {
+                alert('Please save the card first to get a share link');
+                return;
+            }
 
             if (platform === 'whatsapp') {
-                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+                CardUtils.shareToWhatsApp(slug);
             } else if (platform === 'email') {
-                window.open(`mailto:?subject=Wedding Invitation&body=${encodeURIComponent(text + '\n\n' + url)}`, '_blank');
-            } else {
-                alert(`Sharing to ${platform} simulated!`);
+                CardUtils.shareToEmail(slug);
+            } else if (platform === 'instagram') {
+                CardUtils.shareToInstagram(slug);
             }
         }
 
