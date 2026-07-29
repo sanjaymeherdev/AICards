@@ -222,6 +222,54 @@
     document.getElementById('events-list').addEventListener('input', sendUpdate);
     document.getElementById('photos-list').addEventListener('input', sendUpdate);
 
+    // Save Draft - saves to database without sharing (requires auth)
+    async function saveDraft() {
+      if (!Auth.isAuthenticated()) {
+        Auth.requireAuth();
+        return;
+      }
+      
+      const state = getState();
+      const cardData = {
+        html_content: generateFullHTML(state, getCSSContent(state)),
+        template_name: currentTemplateName,
+        title: `Draft - ${state.wedding.bride} & ${state.wedding.groom}`,
+        status: 'draft'
+      };
+      
+      try {
+        const result = await CardUtils.saveCard(cardData, null);
+        alert('✅ Draft saved successfully! You can continue editing anytime.');
+        currentCardId = result.id;
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Save Draft - saves to database without sharing (requires auth)
+    async function saveDraft() {
+      if (!Auth.isAuthenticated()) {
+        Auth.requireAuth();
+        return;
+      }
+      
+      const state = getState();
+      const cardData = {
+        html_content: generateFullHTML(state, getCSSContent(state)),
+        template_name: currentTemplateName,
+        title: `Draft - ${state.wedding.bride} & ${state.wedding.groom}`,
+        status: 'draft'
+      };
+      
+      try {
+        const result = await CardUtils.saveCard(cardData, null);
+        alert('✅ Draft saved successfully! You can continue editing anytime.');
+        currentCardId = result.id;
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
     function exportStandalone() {
       const state = getState();
       // We inline everything to avoid file:// CORS fetch errors
