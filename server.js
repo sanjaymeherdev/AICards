@@ -31,6 +31,11 @@ const upload = multer({
 });
 
 const app = express();
+// Railway (and most PaaS) run behind a reverse proxy, so Express needs to
+// trust the X-Forwarded-For header to correctly identify client IPs.
+// '1' trusts only the first hop (the platform's proxy), which is the safe
+// setting for single-proxy deployments like Railway.
+app.set('trust proxy', 1);
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
