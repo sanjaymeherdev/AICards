@@ -621,7 +621,7 @@ app.get('/api/cards', authMiddleware, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
-      'SELECT id, slug, template_id, status, data, created_at, updated_at FROM cards WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT id, slug, share_slug, template_id, title, status, is_paid, created_at, updated_at FROM cards WHERE user_id = $1 ORDER BY created_at DESC',
       [req.user.userId]
     );
 
@@ -632,14 +632,17 @@ app.get('/api/cards', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/cards/:slug — get a specific card by slug (authenticated)
+// GET /api/cards/:slug — get a specific card by slug OR numeric id (authenticated)
+// Accepts either because Auth.checkCardPayment() in js/utils.js calls this
+// route with the numeric card id returned from the save response, while
+// editor.html's ?slug= reload flow calls it with the slug.
 app.get('/api/cards/:slug', authMiddleware, async (req, res) => {
   const { slug } = req.params;
   
   try {
     const pool = getPool();
     const result = await pool.query(
-      'SELECT id, slug, template_id, status, data, created_at, updated_at FROM cards WHERE user_id = $1 AND slug = $2',
+      'SELECT id, slug, share_slug, template_id, title, status, data, is_paid, created_at, updated_at FROM cards WHERE user_id = $1 AND (slug = $2 OR id::text = $2)',
       [req.user.userId, slug]
     );
 
@@ -654,32 +657,63 @@ app.get('/api/cards/:slug', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/cards — create a new card (authenticated)
+// POST /api/cards — create/save a card (authenticated)
+//
+// The editors (js/save-share.js, templates/*/editor.html) send:
+//   { html_content, template_name, title, status, share_slug, is_paid }
+// `share_slug` is always present here (either a user-chosen custom slug for
+// paid/premium users, or an auto-generated random one for free users) and is
+// used as this card's unique internal identifier (`slug` column). It's only
+// copied into the public `share_slug` column - and therefore only
+// resolvable at a public share link - when `is_paid` is true, per the
+// premium/pay-per-template model described in db/schema.sql.
 app.post('/api/cards', authMiddleware, async (req, res) => {
-  const { slug, template_id, status = 'draft', data = {} } = req.body || {};
-  
-  if (!slug || !template_id) {
-    return res.status(400).json({ error: 'slug and template_id are required' });
+  const {
+    html_content,
+    template_name,
+    title,
+    status = 'draft',
+    share_slug,
+    is_paid = false,
+    data = {},
+  } = req.body || {};
+
+  if (!template_name || !share_slug) {
+    return res.status(400).json({ error: 'template_name and share_slug are required' });
   }
 
   try {
     const pool = getPool();
     const result = await pool.query(
-      `INSERT INTO cards (user_id, slug, template_id, status, data, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      `INSERT INTO cards (user_id, slug, share_slug, template_id, title, status, data, is_paid, html_content, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
        ON CONFLICT (user_id, slug) DO UPDATE SET
+         share_slug = excluded.share_slug,
          template_id = excluded.template_id,
+         title = excluded.title,
          status = excluded.status,
          data = excluded.data,
+         is_paid = excluded.is_paid,
+         html_content = excluded.html_content,
          updated_at = NOW()
-       RETURNING id, slug, template_id, status, data, created_at, updated_at`,
-      [req.user.userId, slug, template_id, status, JSON.stringify(data)]
+       RETURNING id, slug, share_slug, template_id, title, status, data, is_paid, created_at, updated_at`,
+      [
+        req.user.userId,
+        share_slug,
+        is_paid ? share_slug : null,
+        template_name,
+        title || null,
+        status,
+        JSON.stringify(data),
+        is_paid,
+        html_content || null,
+      ]
     );
 
     return res.status(201).json({ card: result.rows[0] });
   } catch (err) {
     console.error('Create card error:', err);
-    return res.status(500).json({ error: 'Failed to create card' });
+    return res.status(500).json({ error: 'Failed to save card' });
   }
 });
 
@@ -763,15 +797,40 @@ app.delete('/api/cards/:slug', authMiddleware, async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Slug fallback — a published invitation lives at a plain URL like
-// "yoursite.com/john-jane", which isn't a real file on disk. express.static
-// above only serves files that exist, so anything else falls through to
-// here: if it looks like a slug (no dot, so not a request for a missing
-// .css/.js/.png etc.) and isn't under /api, /ai-design, or /templates, serve
-// the WeddingCards index.html so its client-side script can look the slug
-// up via /api/card and redirect to the right template.
-// Also serve auth.html at /auth route and profile.html at /profile route
+// GET /api/public-card/:slug — public, unauthenticated lookup used by a
+// shared invitation link (e.g. yoursite.com/aanya-rohan). Resolves by the
+// *public* share_slug column only (never the internal per-user `slug`), so a
+// card only becomes reachable this way once it's been paid/premium-shared
+// via saveAndShare(). Returns the couple's actual saved html_content, which
+// is what makes "Save & Share" produce a working link instead of always
+// showing the generic template demo.
 // ---------------------------------------------------------------------------
+app.get('/api/public-card/:slug', async (req, res) => {
+  const { slug } = req.params;
+
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT status, html_content FROM cards WHERE share_slug = $1',
+      [slug]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ status: 'not_found' });
+    }
+
+    const card = result.rows[0];
+    return res.json({ status: card.status, html_content: card.html_content });
+  } catch (err) {
+    // DATABASE_URL not configured, or a query error - treat as "not found"
+    // here rather than a hard 500 so the client can fall back to the legacy
+    // file-based /api/card lookup used by the standalone AI Card Design tool.
+    console.error('Public card lookup error:', err);
+    return res.json({ status: 'not_found' });
+  }
+});
+
+
 app.get('/auth', (req, res) => {
   res.sendFile(path.join(WEDDING_CARDS_DIR, 'auth.html'));
 });

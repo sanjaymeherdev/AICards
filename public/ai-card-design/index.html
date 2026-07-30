@@ -2586,101 +2586,16 @@ Generate a COMPLETE, working module that can be directly used.`;
             },
 
             refreshPageEffectsPreview() {
-                // Build a mini preview showing the page effects in action
-                const effects = AppState.pageEffects;
+                // Show the *real* card being built - the cover + section designs
+                // chosen in earlier steps - with the current theme/particle/effects
+                // settings applied on top. This reuses the same assembler as the
+                // final Step 4 preview instead of a hardcoded placeholder, so what
+                // you see here is what you'll actually get.
                 const iframe = document.getElementById('pageEffectsPreviewFrame');
                 if (!iframe) return;
 
-                // Create sample content for preview
-                const sampleHTML = `
-                    <div style="padding:40px 20px;text-align:center;">
-                        <h1 style="font-family:${effects.font};font-size:2rem;color:${effects.primaryColor};margin-bottom:10px;">Sample Heading</h1>
-                        <p style="font-family:${effects.font};font-size:${effects.fontSize}px;color:${effects.textColor};line-height:${effects.lineHeight};max-width:80%;margin:0 auto 30px;">This is a preview of your page effects. The background, particles, typography, and colors will match your settings.</p>
-                        <div style="display:flex;gap:15px;justify-content:center;flex-wrap:wrap;">
-                            <div style="width:100px;height:100px;background:${effects.goldColor};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">Card 1</div>
-                            <div style="width:100px;height:100px;background:${effects.primaryColor};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">Card 2</div>
-                            <div style="width:100px;height:100px;background:${effects.textColor};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">Card 3</div>
-                        </div>
-                    </div>
-                `;
-
-                // Build particle script if enabled
-                let particleScript = '';
-                if (effects.particles) {
-                    particleScript = `
-                        (function() {
-                            var container = document.getElementById('particles-container');
-                            if (!container) return;
-                            var count = ${effects.particleCount};
-                            var size = ${effects.particleSize};
-                            var speed = ${effects.particleSpeed};
-                            var color = '${effects.particleColor}';
-                            
-                            for (var i = 0; i < count; i++) {
-                                var p = document.createElement('div');
-                                p.style.cssText = 'position:absolute;width:'+size+'px;height:'+size+'px;background:'+color+';border-radius:50%;opacity:0.6;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;animation:float '+(5+Math.random()*5)+'s infinite ease-in-out;animation-delay:'+Math.random()*2+'s;';
-                                container.appendChild(p);
-                            }
-                            
-                            var style = document.createElement('style');
-                            style.textContent = '@keyframes float { 0%,100% { transform: translateY(0) translateX(0); } 25% { transform: translateY(-20px) translateX(10px); } 50% { transform: translateY(-10px) translateX(-10px); } 75% { transform: translateY(-30px) translateX(5px); } }';
-                            document.head.appendChild(style);
-                        })();
-                    `;
-                }
-
-                // Build scroll effect CSS
-                let scrollCSS = '';
-                if (effects.scrollEffect !== 'none') {
-                    const animName = effects.scrollEffect === 'fade' ? 'fadeIn' :
-                                    effects.scrollEffect === 'slide' ? 'slideUp' :
-                                    effects.scrollEffect === 'zoom' ? 'zoomIn' : 'parallax';
-                    scrollCSS = `
-                        .preview-section { animation: ${animName} ${(11-effects.scrollSpeed)/5}s ease-out; }
-                        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-                        @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-                        @keyframes parallax { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-                    `;
-                }
-
-                // Build background style
-                let bgStyle = `background-color: ${effects.bgColor};`;
-                if (effects.bgStyle === 'gradient') {
-                    bgStyle += `background-image: linear-gradient(135deg, ${effects.bgColor} 0%, ${effects.primaryColor}20 100%);`;
-                } else if (effects.bgStyle === 'image' && effects.bgImage) {
-                    bgStyle += `background-image: url('${effects.bgImage}');background-size: cover;background-position: center;`;
-                } else if (effects.bgStyle === 'pattern') {
-                    bgStyle += `background-image: radial-gradient(circle at 20% 20%, ${effects.goldColor}40 2px, transparent 2px), radial-gradient(circle at 80% 80%, ${effects.goldColor}40 2px, transparent 2px);background-size: 40px 40px;`;
-                }
-
-                const html = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <style>
-                            * { margin: 0; padding: 0; box-sizing: border-box; }
-                            body {
-                                ${bgStyle}
-                                font-family: ${effects.font};
-                                min-height: 100vh;
-                                transition: all 0.3s ease;
-                            }
-                            ${scrollCSS}
-                        </style>
-                    </head>
-                    <body>
-                        <div class="preview-section">
-                            ${sampleHTML}
-                        </div>
-                        ${effects.particles ? '<div id="particles-container" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;"></div>' : ''}
-                        <script>${particleScript}<\\/script>
-                    </body>
-                    </html>
-                `;
-
-                iframe.srcdoc = html;
-            }
+                iframe.srcdoc = this.buildPreviewDocument();
+            },
         };
 
         // ==========================================

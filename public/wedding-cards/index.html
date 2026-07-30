@@ -226,16 +226,33 @@
         // is just someone browsing the landing page, so skip the lookup then.
         const slug = window.location.pathname.replace(/^\/|\/$/g, '');
         if (slug) {
-          fetch(`/api/card?slug=${slug}`)
+          fetch(`/api/public-card/${encodeURIComponent(slug)}`)
             .then(res => res.json())
             .then(data => {
               if (data.status === 'draft') {
                 document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:#333;">🚧 This invitation is being prepared.</h1>';
-              } else if (data.status === 'published') {
-                // Redirect to the specific template's index.html, passing the slug
-                window.location.href = `/templates/${data.template_id}/index.html?slug=${slug}`;
+              } else if (data.status === 'published' && data.html_content) {
+                // Replace the whole document with the couple's actual saved
+                // invitation (rendered client-side, since editors bake the
+                // full standalone HTML at save time via generateFullHTML()).
+                document.open();
+                document.write(data.html_content);
+                document.close();
               } else {
-                document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:red;">Invitation not found.</h1>';
+                // Not a saved/shared card from the authenticated card system -
+                // fall back to the older file-based single-card lookup used
+                // by the standalone AI Card Design tool.
+                fetch(`/api/card?slug=${encodeURIComponent(slug)}`)
+                  .then(res => res.json())
+                  .then(legacy => {
+                    if (legacy.status === 'draft') {
+                      document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:#333;">🚧 This invitation is being prepared.</h1>';
+                    } else if (legacy.status === 'published') {
+                      window.location.href = `/templates/${legacy.template_id}/index.html?slug=${slug}`;
+                    } else {
+                      document.body.innerHTML = '<h1 style="text-align:center; margin-top:20vh; color:red;">Invitation not found.</h1>';
+                    }
+                  });
               }
             });
         }

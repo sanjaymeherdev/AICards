@@ -420,20 +420,28 @@
 
     // Authentication check
     let isAuthenticated = false;
-    let currentSlug = null;
+    // (currentSlug is already declared as a global by ../../js/save-share.js —
+    // redeclaring it here with `let` throws a SyntaxError that silently kills
+    // this entire script block)
     
     function checkAuth() {
       const token = localStorage.getItem('authToken');
+      // Note: this template's markup has no #auth-overlay/#save-btn/#share-btn
+      // elements (the header uses the shared saveDraft()/saveAndShare() buttons
+      // instead), so these lookups are guarded to avoid crashing on null.
+      const authOverlay = document.getElementById('auth-overlay');
+      const saveBtn = document.getElementById('save-btn');
+      const shareBtn = document.getElementById('share-btn');
       if (!token) {
-        document.getElementById('auth-overlay').classList.remove('hidden');
-        document.getElementById('save-btn').disabled = true;
-        document.getElementById('share-btn').disabled = true;
+        if (authOverlay) authOverlay.classList.remove('hidden');
+        if (saveBtn) saveBtn.disabled = true;
+        if (shareBtn) shareBtn.disabled = true;
         return false;
       }
       isAuthenticated = true;
-      document.getElementById('auth-overlay').classList.add('hidden');
-      document.getElementById('save-btn').disabled = false;
-      document.getElementById('share-btn').disabled = false;
+      if (authOverlay) authOverlay.classList.add('hidden');
+      if (saveBtn) saveBtn.disabled = false;
+      if (shareBtn) shareBtn.disabled = false;
       
       // Check for slug in URL
       const urlParams = new URLSearchParams(window.location.search);

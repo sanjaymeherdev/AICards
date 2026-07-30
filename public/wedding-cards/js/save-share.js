@@ -156,7 +156,8 @@ async function confirmSave(encodedData) {
     const cardData = {
       html_content: data.html,
       template_name: currentTemplateName,
-      title: 'Wedding Invitation'
+      title: 'Wedding Invitation',
+      status: 'published'
     };
 
     const result = await CardUtils.saveCard(cardData, shareSlug);

@@ -46,6 +46,7 @@ create table if not exists cards (
   slug            text not null,
   share_slug      text,
   template_id     text not null,
+  title           text,
   status          text not null default 'draft',
   data            jsonb not null default '{}'::jsonb,
   is_paid         boolean not null default false,
@@ -58,6 +59,10 @@ create table if not exists cards (
 create index if not exists cards_user_id_idx on cards (user_id);
 create index if not exists cards_slug_idx on cards (slug);
 create index if not exists cards_share_slug_idx on cards (share_slug);
+
+-- Safe to re-run: adds the title column to a pre-existing cards table that
+-- was created before this column existed.
+alter table cards add column if not exists title text;
 
 -- Payments table to track orders from PaymentGatewayAPI
 -- type: 'premium' (₹5000) or 'per_template' (₹1000)

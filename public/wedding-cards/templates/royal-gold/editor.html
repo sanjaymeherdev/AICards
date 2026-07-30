@@ -417,8 +417,9 @@
     }
 
     // Save & Share functionality
-    let currentCardId = null;
-    let currentSlug = null;
+    // (currentCardId / currentSlug / currentTemplateName are already declared
+    // as globals by ../../js/save-share.js — redeclaring them here with `let`
+    // throws a SyntaxError that silently kills this entire script block)
 
     async function saveAndShare() {
       // Check authentication first
@@ -569,7 +570,8 @@
         const cardData = {
           html_content: data.html,
           template_name: 'royal-gold',
-          title: 'Wedding Invitation'
+          title: 'Wedding Invitation',
+          status: 'published'
         };
 
         const result = await CardUtils.saveCard(cardData, shareSlug);

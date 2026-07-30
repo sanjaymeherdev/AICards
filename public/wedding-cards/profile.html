@@ -178,6 +178,15 @@
       color: white;
     }
     .btn-delete:hover { background: #c82333; }
+    .card-private-note {
+      flex: 1 1 100%;
+      font-size: 0.8rem;
+      color: #856404;
+      background: #fff3cd;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
     
     .empty-state {
       text-align: center;
@@ -401,7 +410,7 @@
           ${userCards.map(card => `
             <div class="card-item">
               <div class="card-header">
-                <div class="card-slug">${escapeHtml(card.slug)}</div>
+                <div class="card-slug">${escapeHtml(card.title || card.slug)}</div>
                 <span class="card-status ${card.status}">${card.status}</span>
               </div>
               <div class="card-details">
@@ -409,9 +418,13 @@
                 <div><i class="fas fa-clock"></i> Updated: ${new Date(card.updated_at).toLocaleDateString()}</div>
               </div>
               <div class="card-actions">
-                <a href="/${card.slug}" target="_blank" class="btn-view"><i class="fas fa-eye"></i> View</a>
+                ${card.share_slug ? `
+                  <a href="/${card.share_slug}" target="_blank" class="btn-view"><i class="fas fa-eye"></i> View</a>
+                  <button class="btn-share" onclick="showShareModal('${card.share_slug}')"><i class="fas fa-share-alt"></i> Share</button>
+                ` : `
+                  <span class="card-private-note"><i class="fas fa-lock"></i> Private draft &mdash; upgrade to get a shareable link</span>
+                `}
                 <a href="/templates/${card.template_id}/editor.html?slug=${card.slug}" class="btn-edit"><i class="fas fa-edit"></i> Edit</a>
-                <button class="btn-share" onclick="showShareModal('${card.slug}')"><i class="fas fa-share-alt"></i> Share</button>
                 <button class="btn-delete" onclick="deleteCard('${card.slug}')"><i class="fas fa-trash"></i> Delete</button>
               </div>
             </div>

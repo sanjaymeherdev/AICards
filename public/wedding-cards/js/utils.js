@@ -322,7 +322,8 @@ const CardUtils = {
             throw new Error(error.error || 'Save failed');
         }
 
-        return await response.json();
+        const result = await response.json();
+        return result.card || result;
     },
 
     async updateCard(cardId, cardData) {
