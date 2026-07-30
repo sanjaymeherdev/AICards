@@ -27,24 +27,29 @@
   --shadow-deep:  0 20px 60px rgba(0,0,0,0.5);
 
   /* RGBA variants for gradients and overlays */
-  --bg-dark-60:   var(--bg-dark-60);
-  --bg-dark-70:   var(--bg-dark-70);
-  --bg-dark-80:   var(--bg-dark-80);
-  --bg-dark-85:   var(--bg-dark-85);
-  --bg-dark-90:   var(--bg-dark-90);
-  --c-primary-18: var(--c-primary-18);
-  --c-primary-20: var(--c-primary-20);
-  --c-primary-25: var(--c-primary-25);
-  --c-primary-35: var(--c-primary-35);
-  --c-primary-50: var(--c-primary-50);
-  --c-primary-80: var(--c-primary-80);
-  --c-primary-85: var(--c-primary-85);
+  --bg-dark-60:   rgba(42,26,31,0.6);
+  --bg-dark-70:   rgba(42,26,31,0.7);
+  --bg-dark-80:   rgba(42,26,31,0.8);
+  --bg-dark-85:   rgba(42,26,31,0.85);
+  --bg-dark-90:   rgba(42,26,31,0.9);
+  --c-primary-18: rgba(194,24,91,0.18);
+  --c-primary-20: rgba(194,24,91,0.2);
+  --c-primary-25: rgba(194,24,91,0.25);
+  --c-primary-35: rgba(194,24,91,0.35);
+  --c-primary-50: rgba(194,24,91,0.5);
+  --c-primary-80: rgba(194,24,91,0.8);
+  --c-primary-85: rgba(194,24,91,0.85);
 
-  /* Theme color aliases - use these throughout the template */
-  --pink: var(--c-accent);
-  --pink-mid: var(--c-primary);
-  --pink-light: var(--c-accent-light);
-  --pink-shine: var(--c-accent-shine);
+  /* Theme color aliases - standardized names used throughout template */
+  --gold: var(--c-accent);
+  --gold-mid: var(--c-primary);
+  --gold-light: var(--c-accent-light);
+  --gold-shine: var(--c-accent-shine);
+  --emerald: var(--c-accent);
+  --emerald-mid: var(--c-primary);
+  --emerald-light: var(--c-accent-light);
+  --ivory: var(--c-ivory);
+  --ivory-dark: #f5e6e8;
   --cream: var(--c-ivory);
   --cream-dark: #ffeef2;
   --dark: var(--bg-dark);

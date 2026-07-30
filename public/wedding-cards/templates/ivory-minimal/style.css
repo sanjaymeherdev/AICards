@@ -40,11 +40,16 @@
   --c-primary-80: rgba(90,80,64,0.8);
   --c-primary-85: rgba(90,80,64,0.85);
 
-  /* Theme color aliases - use these throughout the template */
-  --ivory: var(--c-accent);
-  --ivory-mid: var(--c-primary);
-  --ivory-light: var(--c-accent-light);
-  --ivory-shine: var(--c-accent-shine);
+  /* Theme color aliases - standardized names used throughout template */
+  --gold: var(--c-accent);
+  --gold-mid: var(--c-primary);
+  --gold-light: var(--c-accent-light);
+  --gold-shine: var(--c-accent-shine);
+  --emerald: var(--c-accent);
+  --emerald-mid: var(--c-primary);
+  --emerald-light: var(--c-accent-light);
+  --ivory: var(--c-ivory);
+  --ivory-dark: #f0ece4;
   --cream: var(--c-ivory);
   --cream-dark: #f0e8d8;
   --dark: var(--bg-dark);
